@@ -23,10 +23,10 @@ require (
 	github.com/tinode/jsonco v1.0.0
 	github.com/tinode/snowflake v1.0.0
 	go.mongodb.org/mongo-driver v1.17.1
-	golang.org/x/crypto v0.33.0
-	golang.org/x/oauth2 v0.25.0
-	golang.org/x/text v0.22.0
-	google.golang.org/api v0.215.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/oauth2 v0.24.0
+	golang.org/x/text v0.21.0
+	google.golang.org/api v0.213.0
 	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.36.1
 	gopkg.in/rethinkdb/rethinkdb-go.v6 v6.2.2
@@ -62,8 +62,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.33.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+  golang.org/x/net v0.33.0 // indirect
 )
 
 require (
