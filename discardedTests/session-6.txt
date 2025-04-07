@@ -1,0 +1,1166 @@
+Iteration-1
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+    "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestSchedule_TaskWithoutAvailableWorkers_003(t *testing.T) {
+    numWorkers := 1
+    pool := NewGoRoutinePool(numWorkers)
+
+    taskExecuted := false
+    task := func() {
+        taskExecuted = true
+    }
+
+    // Schedule a task to occupy the only worker
+    pool.Schedule(func() { time.Sleep(200 * time.Millisecond) })
+
+    // Schedule another task
+    pool.Schedule(task)
+
+    // Allow some time for the first task to execute
+    time.Sleep(100 * time.Millisecond)
+
+    assert.False(t, taskExecuted)
+
+    // Allow time for the second task to execute after the first finishes
+    time.Sleep(200 * time.Millisecond)
+
+    assert.True(t, taskExecuted)
+}
+
+
+Error Message:
+FAIL
+coverage: 38.9% of statements
+FAIL	github.com/tinode/chat/server/concurrency	1.710s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+    "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestStop_NoTaskExecutionAfterStop_004(t *testing.T) {
+    numWorkers := 2
+    pool := NewGoRoutinePool(numWorkers)
+
+    taskExecuted := false
+    task := func() {
+        taskExecuted = true
+    }
+
+    pool.Schedule(task)
+    pool.Stop()
+
+    // Allow some time for the stop signal to propagate
+    time.Sleep(100 * time.Millisecond)
+
+    assert.False(t, taskExecuted)
+}
+
+
+Error Message:
+FAIL
+coverage: 66.7% of statements
+FAIL	github.com/tinode/chat/server/concurrency	0.593s
+FAIL
+-------------------------------------------------
+
+Iteration-1
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_ValidConfig_123(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{}
+
+    // Act
+    err := auth.Init(jsonConfig, "test_authenticator")
+
+    // Assert
+    require.NoError(t, err)
+    assert.Equal(t, "test_authenticator", auth.name)
+    assert.Equal(t, 6, auth.codeLength)
+    assert.Equal(t, 5, auth.maxRetries)
+    assert.Equal(t, 300*time.Second, auth.lifetime)
+    assert.NotNil(t, auth.maxCodeValue)
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_BlankName_456(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{}
+
+    // Act
+    err := auth.Init(jsonConfig, "")
+
+    // Assert
+    require.Error(t, err)
+    assert.EqualError(t, err, "auth_code: authenticator name cannot be blank")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_AlreadyInitialized_789(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{name: "existing_authenticator"}
+
+    // Act
+    err := auth.Init(jsonConfig, "new_authenticator")
+
+    // Assert
+    require.Error(t, err)
+    assert.EqualError(t, err, "auth_code: already initialized as existing_authenticator; new_authenticator")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestAuthenticate_MalformedSecret_321(t *testing.T) {
+    // Arrange
+    auth := &authenticator{}
+    secret := []byte("malformed_secret")
+    remoteAddr := "127.0.0.1"
+
+    // Act
+    rec, secretResp, err := auth.Authenticate(secret, remoteAddr)
+
+    // Assert
+    require.Error(t, err)
+    assert.Nil(t, rec)
+    assert.Nil(t, secretResp)
+    assert.EqualError(t, err, "malformed")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "math/big"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/stretchr/testify/require"
+
+    storeMocks "github.com/tinode/chat/mocks/server/store"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestGenSecret_ValidInput_654(t *testing.T) {
+    // Arrange
+    mockPCache := new(storeMocks.PCache)
+    store.PCache = mockPCache
+
+    auth := &authenticator{
+        codeLength: 6,
+        maxCodeValue: big.NewInt(0).Exp(big.NewInt(10), big.NewInt(6), nil),
+        lifetime: 300 * time.Second,
+    }
+    rec := &auth.Rec{
+        Uid:        types.ParseUid("12345"),
+        Credential: "email:alice@example.com",
+    }
+
+    mockPCache.On("Expire", mock.Anything, mock.Anything).Return(nil)
+    mockPCache.On("Upsert", mock.Anything, mock.Anything, true).Return(nil)
+
+    // Act
+    secret, expires, err := auth.GenSecret(rec)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, secret)
+    assert.WithinDuration(t, time.Now().Add(300*time.Second), expires, time.Second)
+    mockPCache.AssertExpectations(t)
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+server/auth/code/auth_code_test.go:19:31: undefined: storeMocks.PCache
+server/auth/code/auth_code_test.go:27:15: auth.Rec is not a type
+server/auth/code/auth_code_test.go:36:41: not enough arguments in call to auth.GenSecret
+	have (*invalid type)
+	want (*auth.Rec, func() time.Time)
+-------------------------------------------------
+
+Iteration-2
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_ValidConfig_001(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{}
+
+    // Act
+    err := auth.Init(jsonConfig, "test_authenticator")
+
+    // Assert
+    require.NoError(t, err)
+    assert.Equal(t, "test_authenticator", auth.name)
+    assert.Equal(t, 6, auth.codeLength)
+    assert.Equal(t, 5, auth.maxRetries)
+    assert.Equal(t, 300*time.Second, auth.lifetime)
+    assert.NotNil(t, auth.maxCodeValue)
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_BlankName_002(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{}
+
+    // Act
+    err := auth.Init(jsonConfig, "")
+
+    // Assert
+    require.Error(t, err)
+    assert.EqualError(t, err, "auth_code: authenticator name cannot be blank")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "encoding/json"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestInit_AlreadyInitialized_003(t *testing.T) {
+    // Arrange
+    jsonConfig := json.RawMessage(`{
+        "code_length": 6,
+        "expire_in": 300,
+        "max_retries": 5
+    }`)
+    auth := &authenticator{name: "existing_authenticator"}
+
+    // Act
+    err := auth.Init(jsonConfig, "new_authenticator")
+
+    // Assert
+    require.Error(t, err)
+    assert.EqualError(t, err, "auth_code: already initialized as existing_authenticator; new_authenticator")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestAuthenticate_MalformedSecret_004(t *testing.T) {
+    // Arrange
+    auth := &authenticator{}
+    secret := []byte("malformed_secret")
+    remoteAddr := "127.0.0.1"
+
+    // Act
+    rec, secretResp, err := auth.Authenticate(secret, remoteAddr)
+
+    // Assert
+    require.Error(t, err)
+    assert.Nil(t, rec)
+    assert.Nil(t, secretResp)
+    assert.EqualError(t, err, "malformed")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "math/big"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/stretchr/testify/require"
+    storeMocks "github.com/tinode/chat/mocks/server/store"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestGenSecret_ValidInput_005(t *testing.T) {
+    // Arrange
+    mockPCache := new(storeMocks.PCache)
+    store.PCache = mockPCache
+
+    auth := &authenticator{
+        codeLength: 6,
+        maxCodeValue: big.NewInt(0).Exp(big.NewInt(10), big.NewInt(6), nil),
+        lifetime: 300 * time.Second,
+    }
+    rec := &auth.Rec{
+        Uid:        types.ParseUid("12345"),
+        Credential: "email:alice@example.com",
+    }
+
+    mockPCache.On("Expire", mock.Anything, mock.Anything).Return(nil)
+    mockPCache.On("Upsert", mock.Anything, mock.Anything, true).Return(nil)
+
+    // Act
+    secret, expires, err := auth.GenSecret(rec)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, secret)
+    assert.WithinDuration(t, time.Now().Add(300*time.Second), expires, time.Second)
+    mockPCache.AssertExpectations(t)
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+server/auth/code/auth_code_test.go:19:31: undefined: storeMocks.PCache
+server/auth/code/auth_code_test.go:27:15: auth.Rec is not a type
+server/auth/code/auth_code_test.go:36:41: not enough arguments in call to auth.GenSecret
+	have (*invalid type)
+	want (*auth.Rec, func() time.Time)
+-------------------------------------------------
+
+Iteration-4
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/store" // Needed for store.RegisterAuthScheme
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+func TestAuthenticator_Init_Scenarios_512(t *testing.T) {
+	// Reset the singleton instance for clean tests
+	authScheme := &authenticator{}
+	store.RegisterAuthScheme(realName+"_test_init", authScheme) // Use a unique name for testing
+
+	t.Run("Success", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "test_code_success")
+		require.NoError(t, err)
+		assert.Equal(t, "test_code_success", auth.name)
+		assert.Equal(t, 6, auth.codeLength)
+		assert.NotNil(t, auth.maxCodeValue)
+		assert.Equal(t, int64(1000000), auth.maxCodeValue.Int64()) // 10^6
+		assert.Equal(t, 300*time.Second, auth.lifetime)
+		assert.Equal(t, 3, auth.maxRetries)
+		assert.True(t, auth.IsInitialized())
+	})
+
+	t.Run("Error_BlankName", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: authenticator name cannot be blank", err.Error())
+		assert.False(t, auth.IsInitialized())
+	})
+
+	t.Run("Error_AlreadyInitialized", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "first_init")
+		require.NoError(t, err)
+		err = auth.Init(json.RawMessage(config), "second_init")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: already initialized as first_init; second_init", err.Error())
+	})
+
+	t.Run("Error_InvalidJson", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300` // Missing closing brace
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_json")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "auth_code: failed to parse config:")
+	})
+
+	t.Run("Error_InvalidExpireIn_Zero", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 0, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_expire_zero")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: invalid expiration period", err.Error())
+	})
+
+	t.Run("Error_InvalidExpireIn_Negative", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": -10, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_expire_neg")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: invalid expiration period", err.Error())
+	})
+
+	t.Run("Error_InvalidCodeLength_TooShort", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 3, "expire_in": 300, "max_retries": 3}`
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_len_short")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: invalid code length", err.Error())
+	})
+
+	t.Run("Error_InvalidMaxRetries_Zero", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300, "max_retries": 0}`
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_retry_zero")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: invalid retries count", err.Error())
+	})
+
+	t.Run("Error_InvalidMaxRetries_Negative", func(t *testing.T) {
+		auth := &authenticator{}
+		config := `{"code_length": 6, "expire_in": 300, "max_retries": -1}`
+		err := auth.Init(json.RawMessage(config), "test_code_invalid_retry_neg")
+		require.Error(t, err)
+		assert.Equal(t, "auth_code: invalid retries count", err.Error())
+	})
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/auth/code tested by
+	github.com/tinode/chat/server/auth/code.test imports
+	// Needed for store.RegisterAuthScheme: "// Needed for store.RegisterAuthScheme" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+func TestAuthenticator_IsInitialized_States_199(t *testing.T) {
+	auth := &authenticator{}
+
+	// Before Init
+	assert.False(t, auth.IsInitialized(), "Should not be initialized before Init")
+
+	// After Init
+	config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+	err := auth.Init(json.RawMessage(config), "test_is_init")
+	require.NoError(t, err)
+	assert.True(t, auth.IsInitialized(), "Should be initialized after successful Init")
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+func TestAuthenticator_UnsupportedMethods_034(t *testing.T) {
+	auth := &authenticator{} // No need to initialize for these methods
+
+	t.Run("AddRecord", func(t *testing.T) {
+		rec, err := auth.AddRecord(&auth.Rec{}, []byte("secret"), "127.0.0.1")
+		assert.Nil(t, rec)
+		require.Error(t, err)
+		assert.Equal(t, types.ErrUnsupported, err)
+	})
+
+	t.Run("UpdateRecord", func(t *testing.T) {
+		rec, err := auth.UpdateRecord(&auth.Rec{}, []byte("secret"), "127.0.0.1")
+		assert.Nil(t, rec)
+		require.Error(t, err)
+		assert.Equal(t, types.ErrUnsupported, err)
+	})
+
+	t.Run("IsUnique", func(t *testing.T) {
+		unique, err := auth.IsUnique([]byte("secret"), "127.0.0.1")
+		assert.False(t, unique)
+		require.Error(t, err)
+		assert.Equal(t, types.ErrUnsupported, err)
+	})
+
+	t.Run("DelRecords", func(t *testing.T) {
+		err := auth.DelRecords(types.ParseUid("usr123"))
+		assert.NoError(t, err) // DelRecords should return nil
+	})
+
+	t.Run("RestrictedTags", func(t *testing.T) {
+		tags, err := auth.RestrictedTags()
+		assert.Nil(t, tags)
+		assert.NoError(t, err)
+	})
+
+	t.Run("GetResetParams", func(t *testing.T) {
+		params, err := auth.GetResetParams(types.ParseUid("usr123"))
+		assert.Nil(t, params)
+		assert.NoError(t, err)
+	})
+
+	t.Run("AsTag", func(t *testing.T) {
+		tag := auth.AsTag("token")
+		assert.Equal(t, "", tag)
+	})
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+server/auth/code/auth_code_test.go:16:36: auth.Rec is not a type
+server/auth/code/auth_code_test.go:23:39: auth.Rec is not a type
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+func TestAuthenticator_GetRealName_921(t *testing.T) {
+	auth := &authenticator{}
+	assert.Equal(t, realName, auth.GetRealName())
+	assert.Equal(t, "code", auth.GetRealName())
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+func TestSanitizeKey_Scenarios_678(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"No percent", "code_email:alice@example.com", "code_email:alice@example.com"},
+		{"One percent", "code_tel:%2B1234567890", "code_tel:/2B1234567890"},
+		{"Multiple percent", "code_custom:a%2Fb%3Fc%25d", "code_custom:a/2Fb/3Fc/25d"},
+		{"Percent at start", "%start", "/start"},
+		{"Percent at end", "end%", "end/"},
+		{"Empty string", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := sanitizeKey(tt.input)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+
+Error Message:
+server/auth/code/auth_code.go:212:37: cannot use &authenticator{} (value of type *authenticator) as auth.AuthHandler value in argument to store.RegisterAuthScheme: *authenticator does not implement auth.AuthHandler (wrong type for method GenSecret)
+		have GenSecret(*auth.Rec, func() time.Time) ([]byte, time.Time, error)
+		want GenSecret(*auth.Rec) ([]byte, time.Time, error)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings" // Added for MatchedBy check
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+
+
+// mockPerishableCacher defined in extra_code
+
+func TestAuthenticator_GenSecret_Scenarios_357(t *testing.T) {
+	auth := &authenticator{}
+	config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+	err := auth.Init(json.RawMessage(config), "test_gen_secret")
+	require.NoError(t, err)
+
+	originalCache := store.PCache
+	defer func() { store.PCache = originalCache }() // Restore original cache
+
+	mockUid := types.ParseUid("usrTest123")
+	cred := "email:test@example.com"
+	rec := &auth.Rec{
+		Uid:        mockUid,
+		Credential: cred,
+		Lifetime:   0, // Use default lifetime initially
+	}
+	expectedKey := sanitizeKey(realName + "_" + cred)
+
+	t.Run("Success_DefaultLifetime", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+
+		mockCache.On("Expire", realName+"_", mock.AnythingOfType("time.Time")).Return(0, nil).Once()
+		// Expect Upsert with correct key, value pattern (code:0:uid), and persist=true
+		mockCache.On("Upsert", expectedKey, mock.MatchedBy(func(val string) bool {
+			parts := strings.Split(val, ":")
+			return len(parts) == 3 && len(parts[0]) == auth.codeLength && parts[1] == "0" && parts[2] == mockUid.String()
+		}), true).Return(nil).Once()
+
+		secret, expires, err := auth.GenSecret(rec)
+		require.NoError(t, err)
+		require.NotNil(t, secret)
+		assert.Len(t, secret, auth.codeLength)
+		// Check if expiration is roughly correct (within a small margin)
+		assert.WithinDuration(t, time.Now().Add(auth.lifetime), expires, 2*time.Second)
+
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Success_CustomLifetime", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		customLifetime := time.Hour
+		recCustom := &auth.Rec{
+			Uid:        mockUid,
+			Credential: cred,
+			Lifetime:   auth.Duration(customLifetime),
+		}
+
+		mockCache.On("Expire", realName+"_", mock.AnythingOfType("time.Time")).Return(0, nil).Once()
+		mockCache.On("Upsert", expectedKey, mock.AnythingOfType("string"), true).Return(nil).Once()
+
+		_, expires, err := auth.GenSecret(recCustom)
+		require.NoError(t, err)
+		assert.WithinDuration(t, time.Now().Add(customLifetime), expires, 2*time.Second)
+
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_NegativeLifetime", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher) // No cache calls expected
+		store.PCache = mockCache
+		recExpired := &auth.Rec{
+			Uid:        mockUid,
+			Credential: cred,
+			Lifetime:   -10 * auth.Duration(time.Second),
+		}
+
+		// Expire is still called before the lifetime check
+		mockCache.On("Expire", realName+"_", mock.AnythingOfType("time.Time")).Return(0, nil).Maybe() // Maybe because test might fail earlier
+
+		secret, expires, err := auth.GenSecret(recExpired)
+		require.Error(t, err)
+		assert.Equal(t, types.ErrExpired, err)
+		assert.Nil(t, secret)
+		assert.True(t, expires.IsZero())
+		// No AssertExpectations needed as no specific calls are strictly required after Expire
+	})
+
+	t.Run("Error_CacheUpsertFailed", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		upsertErr := errors.New("failed to upsert")
+
+		mockCache.On("Expire", realName+"_", mock.AnythingOfType("time.Time")).Return(0, nil).Once()
+		mockCache.On("Upsert", expectedKey, mock.AnythingOfType("string"), true).Return(upsertErr).Once()
+
+		secret, expires, err := auth.GenSecret(rec)
+		require.Error(t, err)
+		assert.Equal(t, upsertErr, err)
+		assert.Nil(t, secret)
+		assert.True(t, expires.IsZero())
+
+		mockCache.AssertExpectations(t)
+	})
+
+	// Note: Testing rand.Int failure is complex and often skipped as it's a system call.
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/auth/code tested by
+	github.com/tinode/chat/server/auth/code.test imports
+	// Added for MatchedBy check: "// Added for MatchedBy check" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/logs" // Import logs to potentially capture warnings
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"github.com/tinode/chat/server/testutils" // Assuming testutils has LogCapture or similar
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+# Need a testutils package, assuming it exists in the project
+# go get github.com/tinode/chat/server/testutils
+
+Test Implementation:
+
+
+// mockPerishableCacher defined in extra_code
+
+func TestAuthenticator_Authenticate_Scenarios_843(t *testing.T) {
+	authImpl := &authenticator{}
+	config := `{"code_length": 6, "expire_in": 300, "max_retries": 3}`
+	err := authImpl.Init(json.RawMessage(config), "test_auth")
+	require.NoError(t, err)
+
+	originalCache := store.PCache
+	defer func() { store.PCache = originalCache }()
+
+	mockUid := types.ParseUid("usrAuth123")
+	cred := "email:auth@example.com"
+	correctCode := "123456"
+	incorrectCode := "654321"
+	key := sanitizeKey(realName + "_" + cred)
+	remoteAddr := "192.168.1.1"
+
+	t.Run("Success", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		cacheValue := fmt.Sprintf("%s:0:%s", correctCode, mockUid.String()) // code:count:uid
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+		mockCache.On("Delete", key).Return(nil).Once() // Expect successful delete
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.NoError(t, err)
+		assert.Nil(t, payload)
+		require.NotNil(t, rec)
+		assert.Equal(t, mockUid, rec.Uid)
+		assert.Equal(t, auth.LevelNone, rec.AuthLevel)
+		assert.Equal(t, auth.Duration(authImpl.lifetime), rec.Lifetime)
+		assert.Equal(t, auth.FeatureNoLogin, rec.Features)
+		assert.Equal(t, types.StateUndefined, rec.State)
+		assert.Equal(t, cred, rec.Credential)
+
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Success_DeleteFails", func(t *testing.T) {
+		// Capture log output
+		lc := testutils.NewLogCapture()
+		lc.Start()
+		defer lc.Stop()
+
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		cacheValue := fmt.Sprintf("%s:1:%s", correctCode, mockUid.String()) // count = 1
+		deleteErr := errors.New("cache delete failed")
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+		mockCache.On("Delete", key).Return(deleteErr).Once() // Expect delete failure
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.NoError(t, err) // Error during delete should be logged, not returned
+		assert.Nil(t, payload)
+		require.NotNil(t, rec)
+		assert.Equal(t, mockUid, rec.Uid)
+
+		// Verify log warning
+		assert.Contains(t, lc.String(), "code_auth: error deleting key")
+		assert.Contains(t, lc.String(), key)
+		assert.Contains(t, lc.String(), deleteErr.Error())
+
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_MalformedSecret", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher) // No cache calls expected
+		store.PCache = mockCache
+
+		secret := []byte("malformednocodon")
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrMalformed, err)
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t) // Should have no expectations
+	})
+
+	t.Run("Error_CacheGet_NotFound", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+
+		mockCache.On("Get", key).Return("", types.ErrNotFound).Once()
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrFailed, err) // Should be converted to ErrFailed
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_CacheGet_OtherError", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		getErr := errors.New("some cache error")
+
+		mockCache.On("Get", key).Return("", getErr).Once()
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, getErr, err) // Should return original error
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_InvalidCacheValueFormat_WrongParts", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		cacheValue := "invalid:format" // Only 2 parts
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrInternal, err)
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_InvalidCacheValueFormat_BadCount", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		cacheValue := fmt.Sprintf("%s:notanumber:%s", correctCode, mockUid.String())
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrInternal, err)
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_MaxRetriesExceeded", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		// Count is already at maxRetries
+		cacheValue := fmt.Sprintf("%s:%d:%s", correctCode, authImpl.maxRetries, mockUid.String())
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+		// No Upsert or Delete expected
+
+		secret := []byte(fmt.Sprintf("%s:%s", correctCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrFailed, err)
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_IncorrectCode", func(t *testing.T) {
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		initialCount := 1
+		cacheValue := fmt.Sprintf("%s:%d:%s", correctCode, initialCount, mockUid.String())
+		updatedCacheValue := fmt.Sprintf("%s:%d:%s", correctCode, initialCount+1, mockUid.String())
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+		// Expect Upsert with incremented count
+		mockCache.On("Upsert", key, updatedCacheValue, false).Return(nil).Once()
+
+		secret := []byte(fmt.Sprintf("%s:%s", incorrectCode, cred)) // Use incorrect code
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrFailed, err)
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+
+	t.Run("Error_IncorrectCode_UpsertFails", func(t *testing.T) {
+		// Should still return ErrFailed, Upsert error is ignored internally
+		mockCache := new(mockPerishableCacher)
+		store.PCache = mockCache
+		initialCount := 0
+		cacheValue := fmt.Sprintf("%s:%d:%s", correctCode, initialCount, mockUid.String())
+		updatedCacheValue := fmt.Sprintf("%s:%d:%s", correctCode, initialCount+1, mockUid.String())
+		upsertErr := errors.New("failed to upsert count")
+
+		mockCache.On("Get", key).Return(cacheValue, nil).Once()
+		mockCache.On("Upsert", key, updatedCacheValue, false).Return(upsertErr).Once() // Upsert fails but error ignored
+
+		secret := []byte(fmt.Sprintf("%s:%s", incorrectCode, cred))
+		rec, payload, err := authImpl.Authenticate(secret, remoteAddr)
+
+		require.Error(t, err)
+		assert.Equal(t, types.ErrFailed, err) // Still returns ErrFailed
+		assert.Nil(t, rec)
+		assert.Nil(t, payload)
+		mockCache.AssertExpectations(t)
+	})
+}
+
+
+Error Message:
+go: finding module for package github.com/tinode/chat/server/testutils
+go: github.com/tinode/chat/server/auth/code tested by
+	github.com/tinode/chat/server/auth/code.test imports
+	// Assuming testutils has LogCapture or similar: "// Assuming testutils has LogCapture or similar" is not a package path; see 'go help packages'
+go: github.com/tinode/chat/server/auth/code tested by
+	github.com/tinode/chat/server/auth/code.test imports
+	github.com/tinode/chat/server/testutils: no matching versions for query "latest"
+
+-------------------------------------------------
+

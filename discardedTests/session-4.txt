@@ -1,0 +1,5688 @@
+Iteration-1
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "bytes"
+    "compress/gzip"
+    "encoding/json"
+    "io"
+    "net/http"
+    "strings"
+    "testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestPostMessage_ValidInputs_SuccessfulResponse_789(t *testing.T) {
+    // Arrange
+    endpoint := "https://example.com/test"
+    body := map[string]string{"key": "value"}
+    config := &configType{
+        AuthToken: "testToken",
+    }
+    mockClient := &http.Client{
+        Transport: &mockTransport{
+            response: &http.Response{
+                StatusCode: http.StatusOK,
+                Body:       io.NopCloser(strings.NewReader(`{"sent_count": 1, "fail_count": 0}`)),
+            },
+        },
+    }
+    http.DefaultClient = mockClient
+
+    // Act
+    resp, err := postMessage(endpoint, body, config)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, resp)
+    assert.Equal(t, 1, resp.SuccessCount)
+    assert.Equal(t, 0, resp.FailureCount)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:70:15: undefined: mockTransport
+-------------------------------------------------
+
+Iteration-2
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "io"
+    "strings"
+    "testing"
+    "net/http"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/push/common"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestPostMessage_ValidInputs_SuccessfulResponse_789(t *testing.T) {
+    // Arrange
+    endpoint := "https://example.com/test"
+    body := map[string]string{"key": "value"}
+    config := &configType{
+        AuthToken: "testToken",
+    }
+
+    // Mock HTTP client
+    mockTransport := &common.MockTransport{
+        Response: &http.Response{
+            StatusCode: http.StatusOK,
+            Body:       io.NopCloser(strings.NewReader(`{"sent_count": 1, "fail_count": 0}`)),
+        },
+    }
+    httpClient := &http.Client{Transport: mockTransport}
+    common.SetHTTPClient(httpClient)
+
+    // Act
+    resp, err := postMessage(endpoint, body, config)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, resp)
+    assert.Equal(t, 1, resp.SuccessCount)
+    assert.Equal(t, 0, resp.FailureCount)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:102:27: undefined: common.MockTransport
+server/push/tnpg/push_tnpg_test.go:109:9: undefined: common.SetHTTPClient
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "io"
+    "strings"
+    "testing"
+    "net/http"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/push/common"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestPostMessage_ResponseWithFatalError_456(t *testing.T) {
+    // Arrange
+    endpoint := "https://example.com/test"
+    body := map[string]string{"key": "value"}
+    config := &configType{
+        AuthToken: "testToken",
+    }
+
+    // Mock HTTP client
+    mockTransport := &common.MockTransport{
+        Response: &http.Response{
+            StatusCode: http.StatusInternalServerError,
+            Body:       io.NopCloser(strings.NewReader(`{"sent_count": 0, "fail_count": 1, "errcode": "internal-error", "errmsg": "Fatal server error"}`)),
+        },
+    }
+    httpClient := &http.Client{Transport: mockTransport}
+    common.SetHTTPClient(httpClient)
+
+    // Act
+    resp, err := postMessage(endpoint, body, config)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, resp)
+    assert.Equal(t, 0, resp.SuccessCount)
+    assert.Equal(t, 1, resp.FailureCount)
+    assert.Equal(t, "internal-error", resp.FatalCode)
+    assert.Equal(t, "Fatal server error", resp.FatalMessage)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:102:27: undefined: common.MockTransport
+server/push/tnpg/push_tnpg_test.go:109:9: undefined: common.SetHTTPClient
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/push"
+    "github.com/tinode/chat/server/push/common"
+    "github.com/tinode/chat/server/store/types"
+    "google.golang.org/api/fcm/v1"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestSendPushes_ExpiredTokens_321(t *testing.T) {
+    // Arrange
+    rcpt := &push.Receipt{
+        To: map[types.Uid]push.Recipient{
+            types.ParseUid("usr123"): {
+                Devices: []string{"device1"},
+            },
+        },
+        Channel: "testChannel",
+        Payload: push.Payload{
+            What: "msg",
+            Topic: "testTopic",
+        },
+    }
+    config := &configType{
+        AuthToken: "testToken",
+    }
+
+    // Mock FCM preparation
+    mockMessages := []*fcmv1.Message{
+        {Token: "expiredToken"},
+    }
+    mockUids := []types.Uid{types.ParseUid("usr123")}
+    fcm.PrepareV1Notifications = func(rcpt *push.Receipt, config *configType) ([]*fcmv1.Message, []types.Uid) {
+        return mockMessages, mockUids
+    }
+
+    // Mock postMessage
+    common.MockPostMessage = func(endpoint string, body interface{}, config *configType) (*batchResponse, error) {
+        return &batchResponse{
+            Responses: []*tnpgResponse{
+                {ErrorCode: common.ErrorUnregistered, MessageID: "msg123"},
+            },
+        }, nil
+    }
+
+    // Act
+    sendPushes(rcpt, config)
+
+    // Assert
+    // Verify logs or any other side effects
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:115:6: undefined: fcm.PrepareV1Notifications
+server/push/tnpg/push_tnpg_test.go:120:9: undefined: common.MockPostMessage
+-------------------------------------------------
+
+Iteration-3
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"compress/gzip"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/push/common"
+	pfcm "github.com/tinode/chat/server/push/fcm" // Use alias to avoid conflict
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	fcmv1 "google.golang.org/api/fcm/v1"
+)
+
+Test Implementation:
+
+
+// Mocking store.Devices for handlePushResponse tests
+type mockDeviceStore struct {
+	DeleteFunc func(uid types.Uid, deviceID string) error
+}
+
+func (m *mockDeviceStore) Delete(uid types.Uid, deviceID string) error {
+	if m.DeleteFunc != nil {
+		return m.DeleteFunc(uid, deviceID)
+	}
+	return nil // Default mock behavior: success
+}
+func (m *mockDeviceStore) Get(uid types.Uid) ([]*types.DeviceDef, error) { return nil, nil } // Add dummy implementations for interface methods if any
+func (m *mockDeviceStore) GetAll(uids []types.Uid) (map[types.Uid][]*types.DeviceDef, error) { return nil, nil }
+func (m *mockDeviceStore) Add(uid types.Uid, dev *types.DeviceDef) error { return nil }
+func (m *mockDeviceStore) UpdateLastSeen(uid types.Uid, deviceID string, ts time.Time) error { return nil }
+func (m *mockDeviceStore) Update(uid types.Uid, dev *types.DeviceDef) error { return nil }
+func (m *mockDeviceStore) DeleteAll(uid types.Uid) error { return nil }
+
+var defaultStoreDevices store.DeviceStore = store.Devices // Backup original store.Devices
+
+// Mocking fcm package functions
+var defaultFcmPrepareV1Notifications = pfcm.PrepareV1Notifications
+var defaultFcmDevicesForUser = pfcm.DevicesForUser
+var defaultFcmChannelsForUser = pfcm.ChannelsForUser
+
+// Mock HTTP client for postMessage tests
+var defaultHTTPClient = http.DefaultClient
+
+func TestPostMessage_Success_200(t *testing.T) {
+	// Arrange
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "Bearer testToken", r.Header.Get("Authorization"))
+		assert.Equal(t, "application/json; charset=utf-8", r.Header.Get("Content-Type"))
+		assert.Equal(t, "gzip", r.Header.Get("Content-Encoding"))
+		assert.Equal(t, "gzip", r.Header.Get("Accept-Encoding"))
+
+		// Check request body (decompress gzip)
+		gzr, err := gzip.NewReader(r.Body)
+		require.NoError(t, err)
+		defer gzr.Close()
+		bodyBytes, err := io.ReadAll(gzr)
+		require.NoError(t, err)
+		var reqBody map[string]string
+		err = json.Unmarshal(bodyBytes, &reqBody)
+		require.NoError(t, err)
+		assert.Equal(t, "value", reqBody["key"])
+
+		// Send gzipped response
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.WriteHeader(http.StatusOK)
+		gw := gzip.NewWriter(w)
+		defer gw.Close()
+		json.NewEncoder(gw).Encode(&batchResponse{
+			SuccessCount: 1,
+			FailureCount: 0,
+			Responses:    []*tnpgResponse{{MessageID: "msg1"}},
+		})
+	}))
+	defer server.Close()
+	http.DefaultClient = server.Client() // Use test client
+	t.Cleanup(func() { http.DefaultClient = defaultHTTPClient }) // Restore default client
+
+
+	body := map[string]string{"key": "value"}
+	config := &configType{AuthToken: "testToken"}
+
+	// Act
+	resp, err := postMessage(server.URL, body, config)
+
+	// Assert
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.httpCode)
+	assert.Equal(t, "200 OK", resp.httpStatus)
+	assert.Equal(t, 1, resp.SuccessCount)
+	assert.Equal(t, 0, resp.FailureCount)
+	assert.Empty(t, resp.FatalCode)
+	assert.Empty(t, resp.FatalMessage)
+	require.Len(t, resp.Responses, 1)
+	assert.Equal(t, "msg1", resp.Responses[0].MessageID)
+}
+
+func TestPostMessage_NonGzipResponse_321(t *testing.T) {
+  // Arrange
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    // No Content-Encoding header
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(&batchResponse{
+      SuccessCount: 1,
+      FailureCount: 0,
+    })
+  }))
+  defer server.Close()
+  http.DefaultClient = server.Client() // Use test client
+  t.Cleanup(func() { http.DefaultClient = defaultHTTPClient }) // Restore default client
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage(server.URL, body, config)
+
+  // Assert
+  require.NoError(t, err)
+  require.NotNil(t, resp)
+  assert.Equal(t, http.StatusOK, resp.httpCode)
+  assert.Equal(t, 1, resp.SuccessCount)
+  assert.Equal(t, 0, resp.FailureCount)
+}
+
+
+func TestPostMessage_HttpError_987(t *testing.T) {
+	// Arrange
+	http.DefaultClient = &http.Client{
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("network error")
+		}),
+	}
+	t.Cleanup(func() { http.DefaultClient = defaultHTTPClient }) // Restore default client
+
+
+	body := map[string]string{"key": "value"}
+	config := &configType{AuthToken: "testToken"}
+
+	// Act
+	resp, err := postMessage("http://invalid-url", body, config)
+
+	// Assert
+	require.Error(t, err)
+	assert.Equal(t, "network error", err.Error())
+	assert.Nil(t, resp)
+}
+
+func TestPostMessage_BadResponse_Non2xx_500(t *testing.T) {
+	// Arrange
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(&batchResponse{
+			FatalCode:    "server-error",
+			FatalMessage: "Internal Server Error Occurred",
+			FailureCount: 1,
+		})
+	}))
+	defer server.Close()
+	http.DefaultClient = server.Client()
+	t.Cleanup(func() { http.DefaultClient = defaultHTTPClient })
+
+
+	body := map[string]string{"key": "value"}
+	config := &configType{AuthToken: "testToken"}
+
+	// Act
+	resp, err := postMessage(server.URL, body, config)
+
+	// Assert
+	require.NoError(t, err) // postMessage itself doesn't error on bad status
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusInternalServerError, resp.httpCode)
+	assert.Equal(t, "500 Internal Server Error", resp.httpStatus)
+	assert.Equal(t, "server-error", resp.FatalCode)
+	assert.Equal(t, "Internal Server Error Occurred", resp.FatalMessage)
+	assert.Equal(t, 1, resp.FailureCount)
+}
+
+
+func TestPostMessage_ResponseDecodeError_753(t *testing.T) {
+  // Arrange
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"invalid json`)) // Malformed JSON
+  }))
+  defer server.Close()
+  http.DefaultClient = server.Client()
+  t.Cleanup(func() { http.DefaultClient = defaultHTTPClient })
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage(server.URL, body, config)
+
+  // Assert
+  require.NoError(t, err) // The error is logged but not returned
+  require.NotNil(t, resp)
+  assert.Equal(t, http.StatusOK, resp.httpCode)
+  // The batchResponse struct will have default values as decoding failed
+  assert.Equal(t, 0, resp.SuccessCount)
+  assert.Equal(t, 0, resp.FailureCount)
+}
+
+
+func TestSendPushes_Success_1Batch_111(t *testing.T) {
+	// Arrange
+	rcpt := &push.Receipt{
+		To: map[types.Uid]push.Recipient{
+			types.ParseUid("usr1"): {Devices: []string{"d1"}},
+		},
+	}
+	config := &configType{AuthToken: "testToken"}
+	handler.pushUrl = "http://test.push/v1" // Ensure handler has URL
+
+	mockMessages := []*fcmv1.Message{{Token: "d1"}}
+	mockUids := []types.Uid{types.ParseUid("usr1")}
+
+	pfcm.PrepareV1Notifications = func(r *push.Receipt, c *configType) ([]*fcmv1.Message, []types.Uid) {
+		assert.Equal(t, rcpt, r)
+		assert.Nil(t, c) // config is nil in PrepareV1Notifications call
+		return mockMessages, mockUids
+	}
+	t.Cleanup(func() { pfcm.PrepareV1Notifications = defaultFcmPrepareV1Notifications })
+
+	postMessageCalled := false
+	// Mock postMessage directly for this test
+	origPostMessage := postMessage
+	t.Cleanup(func() { postMessage = origPostMessage })
+	postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+		postMessageCalled = true
+		assert.Equal(t, handler.pushUrl, endpoint)
+		payloads, ok := body.([]interface{})
+		require.True(t, ok)
+		require.Len(t, payloads, 1)
+		assert.Equal(t, mockMessages[0], payloads[0])
+		assert.Equal(t, config, cfg) // Ensure correct config is passed
+		return &batchResponse{SuccessCount: 1, FailureCount: 0, Responses: []*tnpgResponse{{}}}, nil
+	}
+
+	// Act
+	sendPushes(rcpt, config)
+
+	// Assert
+	assert.True(t, postMessageCalled)
+}
+
+func TestSendPushes_MultipleBatches_222(t *testing.T) {
+	// Arrange
+	rcpt := &push.Receipt{} // Content doesn't matter due to mock
+	config := &configType{AuthToken: "testToken"}
+	handler.pushUrl = "http://test.push/v1"
+
+	totalMessages := pushBatchSize + 5
+	mockMessages := make([]*fcmv1.Message, totalMessages)
+	mockUids := make([]types.Uid, totalMessages)
+	for i := 0; i < totalMessages; i++ {
+		mockMessages[i] = &fcmv1.Message{Token: "t" + string(rune(i))}
+		mockUids[i] = types.ParseUid("usr" + string(rune(i)))
+	}
+
+	pfcm.PrepareV1Notifications = func(r *push.Receipt, c *configType) ([]*fcmv1.Message, []types.Uid) {
+		return mockMessages, mockUids
+	}
+	t.Cleanup(func() { pfcm.PrepareV1Notifications = defaultFcmPrepareV1Notifications })
+
+
+	postMessageCallCount := 0
+	origPostMessage := postMessage
+	t.Cleanup(func() { postMessage = origPostMessage })
+	postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+		postMessageCallCount++
+		payloads, ok := body.([]interface{})
+		require.True(t, ok)
+		if postMessageCallCount == 1 {
+			assert.Len(t, payloads, pushBatchSize)
+		} else if postMessageCallCount == 2 {
+			assert.Len(t, payloads, 5)
+		}
+		return &batchResponse{SuccessCount: len(payloads)}, nil // Assume all succeed
+	}
+
+	// Act
+	sendPushes(rcpt, config)
+
+	// Assert
+	assert.Equal(t, 2, postMessageCallCount)
+}
+
+func TestSendPushes_PostError_333(t *testing.T) {
+	// Arrange
+	rcpt := &push.Receipt{To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}}}
+	config := &configType{AuthToken: "testToken"}
+	handler.pushUrl = "http://test.push/v1"
+
+	mockMessages := []*fcmv1.Message{{Token: "d1"}}
+	mockUids := []types.Uid{types.ParseUid("usr1")}
+
+	pfcm.PrepareV1Notifications = func(r *push.Receipt, c *configType) ([]*fcmv1.Message, []types.Uid) {
+		return mockMessages, mockUids
+	}
+	t.Cleanup(func() { pfcm.PrepareV1Notifications = defaultFcmPrepareV1Notifications })
+
+
+	postMessageCalled := false
+	origPostMessage := postMessage
+	t.Cleanup(func() { postMessage = origPostMessage })
+	postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+		postMessageCalled = true
+		return nil, errors.New("network failure") // Simulate postMessage error
+	}
+
+	// Act
+	sendPushes(rcpt, config)
+
+	// Assert
+	assert.True(t, postMessageCalled) // Ensure postMessage was attempted
+	// No error expected from sendPushes itself, logs warning
+}
+
+
+func TestSendPushes_BadHttpCode_444(t *testing.T) {
+  // Arrange
+  rcpt := &push.Receipt{To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}}}
+  config := &configType{AuthToken: "testToken"}
+  handler.pushUrl = "http://test.push/v1"
+
+  mockMessages := []*fcmv1.Message{{Token: "d1"}}
+  mockUids := []types.Uid{types.ParseUid("usr1")}
+
+  pfcm.PrepareV1Notifications = func(r *push.Receipt, c *configType) ([]*fcmv1.Message, []types.Uid) {
+    return mockMessages, mockUids
+  }
+  t.Cleanup(func() { pfcm.PrepareV1Notifications = defaultFcmPrepareV1Notifications })
+
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    return &batchResponse{httpCode: 403, httpStatus: "403 Forbidden"}, nil // Simulate bad HTTP status
+  }
+
+  // Act
+  sendPushes(rcpt, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+  // No error expected from sendPushes itself, logs warning
+}
+
+func TestSendPushes_FatalError_555(t *testing.T) {
+  // Arrange
+  rcpt := &push.Receipt{To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}}}
+  config := &configType{AuthToken: "testToken"}
+  handler.pushUrl = "http://test.push/v1"
+
+  mockMessages := []*fcmv1.Message{{Token: "d1"}}
+  mockUids := []types.Uid{types.ParseUid("usr1")}
+
+  pfcm.PrepareV1Notifications = func(r *push.Receipt, c *configType) ([]*fcmv1.Message, []types.Uid) {
+    return mockMessages, mockUids
+  }
+  t.Cleanup(func() { pfcm.PrepareV1Notifications = defaultFcmPrepareV1Notifications })
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    return &batchResponse{httpCode: 200, FatalCode: "auth-error", FatalMessage: "Bad token"}, nil // Simulate fatal error
+  }
+
+  // Act
+  sendPushes(rcpt, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+  // No error expected from sendPushes itself, logs error
+}
+
+
+func TestProcessSubscription_ChannelSub_101(t *testing.T) {
+	// Arrange
+	req := &push.ChannelReq{
+		Uid:     types.ParseUid("usr1"),
+		Channel: "grpTest",
+		Unsub:   false,
+	}
+	config := &configType{AuthToken: "subToken"}
+	handler.subUrl = "http://test.sub/v1"
+
+	mockDevices := []string{"d1", "d2"}
+	pfcm.DevicesForUser = func(uid types.Uid) []string {
+		assert.Equal(t, req.Uid, uid)
+		return mockDevices
+	}
+	t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+	postMessageCalled := false
+	origPostMessage := postMessage
+	t.Cleanup(func() { postMessage = origPostMessage })
+	postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+		postMessageCalled = true
+		assert.Equal(t, handler.subUrl, endpoint)
+		subReq, ok := body.(*subUnsubReq)
+		require.True(t, ok)
+		assert.Equal(t, req.Channel, subReq.Channel)
+		assert.Equal(t, mockDevices, subReq.Devices)
+		assert.False(t, subReq.Unsub)
+		assert.Empty(t, subReq.Device)
+		assert.Empty(t, subReq.Channels)
+		assert.Equal(t, config, cfg)
+		return &batchResponse{httpCode: 200, SuccessCount: len(mockDevices)}, nil
+	}
+
+	// Act
+	processSubscription(req, config)
+
+	// Assert
+	assert.True(t, postMessageCalled)
+}
+
+func TestProcessSubscription_DeviceSub_202(t *testing.T) {
+  // Arrange
+  req := &push.ChannelReq{
+    Uid:      types.ParseUid("usr2"),
+    DeviceID: "d3",
+    Unsub:    true, // Test unsubscribe
+  }
+  config := &configType{AuthToken: "subToken2"}
+  handler.subUrl = "http://test.sub/v1"
+
+  mockChannels := []string{"grp1", "grp2", "p2p3"}
+  pfcm.ChannelsForUser = func(uid types.Uid) []string {
+    assert.Equal(t, req.Uid, uid)
+    return mockChannels
+  }
+  t.Cleanup(func() { pfcm.ChannelsForUser = defaultFcmChannelsForUser })
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    subReq, ok := body.(*subUnsubReq)
+    require.True(t, ok)
+    assert.Equal(t, req.DeviceID, subReq.Device)
+    assert.Equal(t, mockChannels, subReq.Channels)
+    assert.True(t, subReq.Unsub)
+    assert.Empty(t, subReq.Channel)
+    assert.Empty(t, subReq.Devices)
+    return &batchResponse{httpCode: 200, SuccessCount: len(mockChannels)}, nil
+  }
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+}
+
+func TestProcessSubscription_NoDevicesOrChannels_303(t *testing.T) {
+  // Arrange
+  config := &configType{}
+  handler.subUrl = "http://test.sub/v1"
+
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessageCalled := false
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true // This should not be called
+    return nil, nil
+  }
+
+  // Case 1: Channel sub, no devices
+  reqChan := &push.ChannelReq{Uid: types.ParseUid("usr1"), Channel: "grpTest"}
+  pfcm.DevicesForUser = func(uid types.Uid) []string { return []string{} } // No devices
+  t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+  processSubscription(reqChan, config)
+  assert.False(t, postMessageCalled, "postMessage should not be called for channel sub with no devices")
+
+  // Case 2: Device sub, no channels
+  reqDev := &push.ChannelReq{Uid: types.ParseUid("usr2"), DeviceID: "d3"}
+  pfcm.ChannelsForUser = func(uid types.Uid) []string { return []string{} } // No channels
+  t.Cleanup(func() { pfcm.ChannelsForUser = defaultFcmChannelsForUser })
+
+  processSubscription(reqDev, config)
+  assert.False(t, postMessageCalled, "postMessage should not be called for device sub with no channels")
+}
+
+func TestProcessSubscription_TooManyDevices_404(t *testing.T) {
+	// Arrange
+	req := &push.ChannelReq{
+		Uid:     types.ParseUid("usrBig"),
+		Channel: "grpBig",
+		Unsub:   false,
+	}
+	config := &configType{}
+	handler.subUrl = "http://test.sub/v1"
+
+	// Generate more devices than batch size
+	mockDevices := make([]string, subBatchSize+10)
+	for i := range mockDevices {
+		mockDevices[i] = "d" + string(rune(i))
+	}
+
+	pfcm.DevicesForUser = func(uid types.Uid) []string {
+		return mockDevices
+	}
+	t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+
+	postMessageCalled := false
+	origPostMessage := postMessage
+	t.Cleanup(func() { postMessage = origPostMessage })
+	postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+		postMessageCalled = true
+		subReq, ok := body.(*subUnsubReq)
+		require.True(t, ok)
+		// Assert that devices were truncated to subBatchSize
+		assert.Len(t, subReq.Devices, subBatchSize)
+		assert.Equal(t, mockDevices[:subBatchSize], subReq.Devices)
+		return &batchResponse{httpCode: 200, SuccessCount: subBatchSize}, nil
+	}
+
+	// Act
+	processSubscription(req, config)
+
+	// Assert
+	assert.True(t, postMessageCalled)
+}
+
+func TestProcessSubscription_PostError_505(t *testing.T) {
+  // Arrange
+  req := &push.ChannelReq{Uid: types.ParseUid("usr1"), Channel: "grpTest"}
+  config := &configType{}
+  handler.subUrl = "http://test.sub/v1"
+
+  pfcm.DevicesForUser = func(uid types.Uid) []string { return []string{"d1"} }
+  t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    return nil, errors.New("sub network failure") // Simulate post error
+  }
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+  // Error is logged, function returns
+}
+
+func TestProcessSubscription_BadHttpCode_606(t *testing.T) {
+  // Arrange
+  req := &push.ChannelReq{Uid: types.ParseUid("usr1"), Channel: "grpTest"}
+  config := &configType{}
+  handler.subUrl = "http://test.sub/v1"
+
+  pfcm.DevicesForUser = func(uid types.Uid) []string { return []string{"d1"} }
+  t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    return &batchResponse{httpCode: 503, httpStatus: "503 Service Unavailable"}, nil // Simulate bad HTTP status
+  }
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+  // Error is logged, function returns
+}
+
+func TestProcessSubscription_FatalError_707(t *testing.T) {
+  // Arrange
+  req := &push.ChannelReq{Uid: types.ParseUid("usr1"), Channel: "grpTest"}
+  config := &configType{}
+  handler.subUrl = "http://test.sub/v1"
+
+  pfcm.DevicesForUser = func(uid types.Uid) []string { return []string{"d1"} }
+  t.Cleanup(func() { pfcm.DevicesForUser = defaultFcmDevicesForUser })
+
+
+  postMessageCalled := false
+  origPostMessage := postMessage
+  t.Cleanup(func() { postMessage = origPostMessage })
+  postMessage = func(endpoint string, body interface{}, cfg *configType) (*batchResponse, error) {
+    postMessageCalled = true
+    return &batchResponse{httpCode: 200, FatalCode: "quota-error", FatalMessage: "Out of quota"}, nil // Simulate fatal error
+  }
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postMessageCalled)
+  // Error is logged, function returns
+}
+
+
+func TestHandlePushResponse_NoFailures_001(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{SuccessCount: 2, FailureCount: 0}
+	messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+	uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+	// Act & Assert (should just return immediately)
+	handlePushResponse(batch, messages, uids)
+	// No external calls expected
+}
+
+func TestHandlePushResponse_TransientErrors_002(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{
+		SuccessCount: 0,
+		FailureCount: 2,
+		Responses: []*tnpgResponse{
+			{ErrorCode: common.ErrorUnavailable, ErrorMessage: "Server busy"},
+			{ErrorCode: common.ErrorInternal, ErrorMessage: "Internal issue"},
+		},
+	}
+	messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+	uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+	// Act & Assert
+	handlePushResponse(batch, messages, uids) // Should log and return after first transient error
+	// No store calls expected
+}
+
+func TestHandlePushResponse_InvalidArgument_Token_003(t *testing.T) {
+	// Arrange
+	uidToDelete := types.ParseUid("usr1")
+	tokenToDelete := "invalidToken"
+	batch := &batchResponse{
+		SuccessCount: 0,
+		FailureCount: 1,
+		Responses: []*tnpgResponse{
+			{ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid registration token: message.token", ErrorMessage: "Bad token"},
+		},
+	}
+	messages := []*fcmv1.Message{{Token: tokenToDelete}}
+	uids := []types.Uid{uidToDelete}
+
+	mockStore := &mockDeviceStore{}
+	deleteCalled := false
+	mockStore.DeleteFunc = func(uid types.Uid, deviceID string) error {
+		deleteCalled = true
+		assert.Equal(t, uidToDelete, uid)
+		assert.Equal(t, tokenToDelete, deviceID)
+		return nil // Simulate successful deletion
+	}
+	store.Devices = mockStore // Replace original store
+	t.Cleanup(func() { store.Devices = defaultStoreDevices }) // Restore original store
+
+
+	// Act
+	handlePushResponse(batch, messages, uids)
+
+	// Assert
+	assert.True(t, deleteCalled, "store.Devices.Delete should be called for invalid token")
+}
+
+func TestHandlePushResponse_InvalidArgument_Other_004(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{
+		SuccessCount: 0,
+		FailureCount: 1,
+		Responses: []*tnpgResponse{
+			{ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid payload format", ErrorMessage: "Bad payload"},
+		},
+	}
+	messages := []*fcmv1.Message{{Token: "validToken"}}
+	uids := []types.Uid{types.ParseUid("usr1")}
+
+	mockStore := &mockDeviceStore{}
+	deleteCalled := false // This should remain false
+	mockStore.DeleteFunc = func(uid types.Uid, deviceID string) error {
+		deleteCalled = true
+		return nil
+	}
+	store.Devices = mockStore
+	t.Cleanup(func() { store.Devices = defaultStoreDevices })
+
+
+	// Act
+	handlePushResponse(batch, messages, uids)
+
+	// Assert
+	assert.False(t, deleteCalled, "store.Devices.Delete should NOT be called for non-token invalid argument")
+}
+
+
+func TestHandlePushResponse_InvalidArgument_TokenDeleteError_005(t *testing.T) {
+  // Arrange
+  uidToDelete := types.ParseUid("usr1")
+  tokenToDelete := "invalidToken"
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid registration token: message.token", ErrorMessage: "Bad token"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  mockStore := &mockDeviceStore{}
+  deleteCalled := false
+  mockStore.DeleteFunc = func(uid types.Uid, deviceID string) error {
+    deleteCalled = true
+    return errors.New("db error") // Simulate deletion error
+  }
+  store.Devices = mockStore
+  t.Cleanup(func() { store.Devices = defaultStoreDevices })
+
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error is logged, processing continues
+
+  // Assert
+  assert.True(t, deleteCalled, "store.Devices.Delete should be called")
+  // Log verification would be ideal here
+}
+
+func TestHandlePushResponse_ConfigError_006(t *testing.T) {
+  // Arrange
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorSenderIDMismatch, ErrorMessage: "Mismatch"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}}
+  uids := []types.Uid{types.ParseUid("usr1")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log and return
+
+  // Assert
+  // No store calls expected
+}
+
+func TestHandlePushResponse_Unregistered_007(t *testing.T) {
+  // Arrange
+  uidToDelete := types.ParseUid("usr2")
+  tokenToDelete := "unregisteredToken"
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  mockStore := &mockDeviceStore{}
+  deleteCalled := false
+  mockStore.DeleteFunc = func(uid types.Uid, deviceID string) error {
+    deleteCalled = true
+    assert.Equal(t, uidToDelete, uid)
+    assert.Equal(t, tokenToDelete, deviceID)
+    return nil // Simulate successful deletion
+  }
+  store.Devices = mockStore
+  t.Cleanup(func() { store.Devices = defaultStoreDevices })
+
+
+  // Act
+  handlePushResponse(batch, messages, uids)
+
+  // Assert
+  assert.True(t, deleteCalled, "store.Devices.Delete should be called for unregistered token")
+}
+
+func TestHandlePushResponse_Unregistered_DeleteError_008(t *testing.T) {
+  // Arrange
+  uidToDelete := types.ParseUid("usr2")
+  tokenToDelete := "unregisteredToken"
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  mockStore := &mockDeviceStore{}
+  deleteCalled := false
+  mockStore.DeleteFunc = func(uid types.Uid, deviceID string) error {
+    deleteCalled = true
+    return errors.New("db error on unregistered delete") // Simulate deletion error
+  }
+  store.Devices = mockStore
+  t.Cleanup(func() { store.Devices = defaultStoreDevices })
+
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error is logged
+
+  // Assert
+  assert.True(t, deleteCalled, "store.Devices.Delete should be called")
+}
+
+func TestHandlePushResponse_DefaultError_009(t *testing.T) {
+  // Arrange
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: "some-new-error", ErrorMessage: "Unknown issue"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}}
+  uids := []types.Uid{types.ParseUid("usr1")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log
+
+  // Assert
+  // No store calls expected
+}
+
+func TestHandleSubResponse_NoFailures_010(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{SuccessCount: 1, FailureCount: 0}
+	req := &push.ChannelReq{Uid: types.ParseUid("usr1")}
+	devices := []string{"d1"}
+	channels := []string{}
+
+	// Act & Assert (should just return)
+	handleSubResponse(batch, req, devices, channels)
+}
+
+func TestHandleSubResponse_Failures_Devices_011(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{
+		SuccessCount: 0,
+		FailureCount: 2,
+		Responses: []*tnpgResponse{
+			{Index: 0, ErrorCode: "sub-err-1"},
+			{Index: 1, ErrorCode: "sub-err-2"},
+		},
+	}
+	req := &push.ChannelReq{Uid: types.ParseUid("usr1")}
+	devices := []string{"d1", "d2"}
+	channels := []string{}
+
+	// Act
+	handleSubResponse(batch, req, devices, channels)
+
+	// Assert: Logs warnings with device IDs, no other side effects
+	// Log verification needed for full test
+}
+
+func TestHandleSubResponse_Failures_Channels_012(t *testing.T) {
+	// Arrange
+	batch := &batchResponse{
+		SuccessCount: 0,
+		FailureCount: 2,
+		Responses: []*tnpgResponse{
+			{Index: 0, ErrorCode: "sub-err-3"},
+			{Index: 1, ErrorCode: "sub-err-4"},
+		},
+	}
+	req := &push.ChannelReq{Uid: types.ParseUid("usr2")}
+	devices := []string{}
+	channels := []string{"grpA", "grpB"}
+
+	// Act
+	handleSubResponse(batch, req, devices, channels)
+
+	// Assert: Logs warnings with channel names, no other side effects
+	// Log verification needed for full test
+}
+
+func TestHandler_PushChannelReturns_Initialized_789(t *testing.T) {
+	// Arrange
+	// Ensure handler is initialized (or re-initialize if needed)
+	validConfig := configType{Enabled: true, OrgID: "initTest", AuthToken: "tok"}
+	jsonConfig, _ := json.Marshal(validConfig)
+	_, _ = handler.Init(jsonConfig) // Ignore errors for this test focus
+
+	// Act
+	pushChan := handler.Push()
+	channelChan := handler.Channel()
+
+	// Assert
+	assert.Same(t, handler.input, pushChan, "Push() should return the initialized input channel")
+	assert.Same(t, handler.channel, channelChan, "Channel() should return the initialized channel channel")
+}
+
+
+func TestHandlerInit_JsonError_999(t *testing.T) {
+  // Arrange
+  invalidJson := json.RawMessage(`{"enabled": true, "org": "test, "token": "abc"`) // Missing quote
+
+  // Act
+  success, err := handler.Init(invalidJson)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Contains(t, err.Error(), "failed to parse config")
+}
+
+func TestHandlerInit_UrlParseError_888(t *testing.T) {
+  // Arrange
+  // Use an invalid character in the debug host to cause url.Parse error
+  config := configType{Enabled: true, OrgID: "testOrg", DebugPushGWHost: "http://host with space/"}
+  jsonConfig, _ := json.Marshal(config)
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Contains(t, err.Error(), "invalid character") // Check for url.Parse specific error message
+}
+
+
+// Helper type for mocking http.Client transport
+type roundTripperFunc func(req *http.Request) (*http.Response, error)
+func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestHandlerInit_Disabled_777(t *testing.T) {
+  // Arrange
+  config := configType{Enabled: false, OrgID: "testOrg"} // Explicitly disabled
+  jsonConfig, _ := json.Marshal(config)
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.NoError(t, err)
+  assert.False(t, success) // Should return false when disabled
+  assert.Nil(t, handler.input) // Channels should not be initialized
+  assert.Nil(t, handler.channel)
+  assert.Nil(t, handler.stop)
+}
+
+func TestHandlerInit_WithDebugHost_666(t *testing.T) {
+    // Arrange
+    debugHost := "http://localhost:8080/"
+    config := configType{
+        Enabled:         true,
+        OrgID:           "debugOrg",
+        AuthToken:       "debugToken",
+        DebugPushGWHost: debugHost,
+    }
+    jsonConfig, err := json.Marshal(config)
+    require.NoError(t, err)
+
+    // Act
+    success, err := handler.Init(jsonConfig)
+
+    // Assert
+    require.NoError(t, err)
+    assert.True(t, success)
+    assert.Equal(t, "http://localhost:8080/pushv1/debugorg", handler.pushUrl)
+    assert.Equal(t, "http://localhost:8080/sub/debugorg", handler.subUrl)
+    assert.NotNil(t, handler.input)
+    assert.NotNil(t, handler.channel)
+    assert.NotNil(t, handler.stop)
+}
+
+func TestHandlerIsReady_NotInitialized_555(t *testing.T) {
+  // Arrange
+  handler.input = nil // Ensure it's not initialized
+
+  // Act
+  ready := handler.IsReady()
+
+  // Assert
+  assert.False(t, ready)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:122:31: undefined: store.DeviceStore
+server/push/tnpg/push_tnpg_test.go:307:2: use of package pfcm not in selector
+server/push/tnpg/push_tnpg_test.go:307:2: cannot assign to pfcm.PrepareV1Notifications (neither addressable nor a map index expression)
+server/push/tnpg/push_tnpg_test.go:312:21: use of package pfcm not in selector
+server/push/tnpg/push_tnpg_test.go:312:21: cannot assign to pfcm.PrepareV1Notifications (neither addressable nor a map index expression)
+server/push/tnpg/push_tnpg_test.go:317:21: cannot assign to postMessage (neither addressable nor a map index expression)
+server/push/tnpg/push_tnpg_test.go:318:2: cannot assign to postMessage (neither addressable nor a map index expression)
+server/push/tnpg/push_tnpg_test.go:350:2: use of package pfcm not in selector
+server/push/tnpg/push_tnpg_test.go:350:2: cannot assign to pfcm.PrepareV1Notifications (neither addressable nor a map index expression)
+server/push/tnpg/push_tnpg_test.go:353:21: use of package pfcm not in selector
+server/push/tnpg/push_tnpg_test.go:353:21: too many errors
+-------------------------------------------------
+
+Iteration-4
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestWorker_ProcessesInputChannel_258(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t) // Setup mocks and initialize handler
+    postCalled := false
+
+    // Mock HTTP Server for postMessage called by sendPushes
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+        assert.Equal(t, "/pushv1/"+config.OrgID, r.URL.Path) 
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&batchResponse{SuccessCount: 1})
+    }))
+    defer server.Close()
+    
+    // Ensure handler uses the test server URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += pushPath + "/" + config.OrgID
+    handler.pushUrl = serverUrl.String()
+   
+    rcpt := &push.Receipt{
+        To: map[types.Uid]push.Recipient{
+            types.ParseUid("usrWorker"): {Devices: []string{"dWorker"}},
+        },
+        Payload: push.Payload{Topic: "grpWorker"},
+    }
+
+    // Act: Send a receipt to the input channel
+    handler.input <- rcpt
+
+    // Assert: Wait briefly for the worker goroutine to process the message
+    // and make the HTTP call. In a real-world scenario, use channels or waits.
+    time.Sleep(100 * time.Millisecond) 
+    assert.True(t, postCalled, "postMessage should have been called by the worker")
+    mockDev.AssertExpectations(t) // Ensure no unexpected store calls
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:112:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestWorker_ProcessesChannelReq_369(t *testing.T) {
+    // Arrange
+    _, mockSub, config := setupTestEnv(t) // Setup mocks and initialize handler
+    postCalled := false
+
+    // Mock store for fcm.ChannelsForUser dependency
+    mockSub.On("GetUserSubs", types.ParseUid("usrChanWorker"), (*types.QueryOpt)(nil)).Return([]types.Subscription{
+        {Topic: "grpChan1"}, {Topic: "grpChan2"},
+    }, nil).Once()
+
+
+    // Mock HTTP Server for postMessage called by processSubscription
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+        assert.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+         // Verify request body
+        gzr, err := gzip.NewReader(r.Body)
+        require.NoError(t, err)
+        defer gzr.Close()
+        bodyBytes, err := io.ReadAll(gzr)
+        require.NoError(t, err)
+        var reqBody subUnsubReq
+        err = json.Unmarshal(bodyBytes, &reqBody)
+        require.NoError(t, err)
+        assert.Equal(t, "dChanWorker", reqBody.Device)
+        assert.ElementsMatch(t, []string{"grpChan1", "grpChan2"}, reqBody.Channels)
+        assert.False(t, reqBody.Unsub)
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&batchResponse{SuccessCount: 2}) // 2 channels
+    }))
+    defer server.Close()
+
+    // Ensure handler uses the test server URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += subsPath + "/" + config.OrgID
+    handler.subUrl = serverUrl.String()
+
+    req := &push.ChannelReq{
+        Uid:      types.ParseUid("usrChanWorker"),
+        DeviceID: "dChanWorker", // Subscribe this device to all channels
+        Unsub:    false,
+    }
+
+    // Act: Send a channel request to the channel
+    handler.channel <- req
+
+    // Assert: Wait briefly for the worker goroutine
+    time.Sleep(100 * time.Millisecond) 
+    assert.True(t, postCalled, "postMessage should have been called by the worker for channel req")
+    mockSub.AssertExpectations(t) // Verify store call
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:114:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestPostMessage_HttpDoError_987(t *testing.T) {
+  // Arrange
+  // Mock the HTTP client to return an error
+  originalClient := http.DefaultClient
+  http.DefaultClient = &http.Client{
+    Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+      return nil, errors.New("simulated network error")
+    }),
+  }
+  t.Cleanup(func() { http.DefaultClient = originalClient }) // Restore default client
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage("http://valid-looking-url.com", body, config) // URL doesn't matter due to mock transport
+
+  // Assert
+  require.Error(t, err)
+  assert.Contains(t, err.Error(), "simulated network error")
+  assert.Nil(t, resp)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:14: undefined: roundTripperFunc
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestPostMessage_ResponseDecodeError_753(t *testing.T) {
+  // Arrange
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"invalid json`)) // Malformed JSON
+  }))
+  defer server.Close()
+  originalClient := http.DefaultClient
+  http.DefaultClient = server.Client()
+  t.Cleanup(func() { http.DefaultClient = originalClient })
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage(server.URL, body, config)
+
+  // Assert
+  require.NoError(t, err) // The error is logged internally but not returned by postMessage
+  require.NotNil(t, resp)
+  assert.Equal(t, http.StatusOK, resp.httpCode)
+  // The batchResponse struct will have default zero values as decoding failed
+  assert.Equal(t, 0, resp.SuccessCount)
+  assert.Equal(t, 0, resp.FailureCount)
+  assert.Empty(t, resp.FatalCode)
+  assert.Empty(t, resp.FatalMessage)
+  assert.Nil(t, resp.Responses)
+}
+
+
+Error Message:
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+	panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x104f32960]
+
+goroutine 22 [running]:
+testing.tRunner.func1.2({0x105aa7c40, 0x106889ac0})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x105aa7c40?, 0x106889ac0?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).output(0x1068898e0?, 0x140002ef100?, 0x0?, 0x0?)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:203 +0x30
+log.(*Logger).Println(0x1400030f780?, {0x14000037e28?, 0x140003409c0?, 0xf?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:276 +0x48
+github.com/tinode/chat/server/push/tnpg.postMessage({0x140002c2330, 0x16}, {0x105a94300, 0x1400033dd40}, 0x140000b1f08)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg.go:198 +0x6a4
+github.com/tinode/chat/server/push/tnpg.TestPostMessage_ResponseDecodeError_753(0x140003521a0)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg_test.go:154 +0x17c
+testing.tRunner(0x140003521a0, 0x105d29f58)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server/push/tnpg	0.633s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestSendPushes_Success_1Batch_111(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t) // Setup mocks and initialize handler
+    postCalled := false
+
+    rcpt := &push.Receipt{
+        To: map[types.Uid]push.Recipient{
+            types.ParseUid("usr1"): {Devices: []string{"d1"}},
+        },
+        // Provide necessary payload fields for fcm.PrepareV1Notifications
+        Payload: push.Payload{Topic: "grpTest", SeqId: 1, From:"usr2", What: "msg", Timestamp: time.Now()},
+    }
+
+    // Mock HTTP Server for postMessage
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+        assert.Equal(t, "/pushv1/"+config.OrgID, r.URL.Path) 
+        // Check that the body contains one message (simplified check)
+         gzr, err := gzip.NewReader(r.Body)
+         require.NoError(t, err)
+         defer gzr.Close()
+         bodyBytes, err := io.ReadAll(gzr)
+         require.NoError(t, err)
+         var payloads []json.RawMessage
+         err = json.Unmarshal(bodyBytes, &payloads)
+         require.NoError(t, err)
+         assert.Len(t, payloads, 1)
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        // Response indicating success, no failures to trigger handlePushResponse actions
+        json.NewEncoder(w).Encode(&batchResponse{
+            SuccessCount: 1,
+            FailureCount: 0,
+            Responses:    []*tnpgResponse{{MessageID: "msg1"}},
+        })
+    }))
+    defer server.Close()
+
+    // Set handler URL to use the test server
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += pushPath + "/" + config.OrgID
+    handler.pushUrl = serverUrl.String()
+
+    // Act
+    sendPushes(rcpt, config) // This calls fcm.PrepareV1Notifications -> postMessage -> handlePushResponse
+
+    // Assert
+    assert.True(t, postCalled, "postMessage should have been called")
+    mockDev.AssertExpectations(t) // Ensure no unexpected store calls (like Delete)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:146:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestSendPushes_MultipleBatches_222(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCallCount := 0
+
+    // Create enough recipients to require multiple batches
+    rcpt := &push.Receipt{To: make(map[types.Uid]push.Recipient), Payload: push.Payload{Topic:"bigGrp"}}
+    numMessages := pushBatchSize + 5
+    for i := 0; i < numMessages; i++ {
+        uid := types.ParseUid("usr" + string(rune('a'+i)))
+        rcpt.To[uid] = push.Recipient{Devices: []string{"d" + string(rune('a'+i))}}
+    }
+
+    // Mock HTTP Server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCallCount++
+         gzr, err := gzip.NewReader(r.Body)
+         require.NoError(t, err)
+         defer gzr.Close()
+         bodyBytes, err := io.ReadAll(gzr)
+         require.NoError(t, err)
+         var payloads []json.RawMessage
+         err = json.Unmarshal(bodyBytes, &payloads)
+         require.NoError(t, err)
+
+        expectedLen := pushBatchSize
+        if postCallCount == 2 {
+            expectedLen = 5
+        }
+        assert.Len(t, payloads, expectedLen, "Batch %d size mismatch", postCallCount)
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&batchResponse{SuccessCount: len(payloads)}) // Assume all succeed
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += pushPath + "/" + config.OrgID
+    handler.pushUrl = serverUrl.String()
+
+    // Act
+    sendPushes(rcpt, config)
+
+    // Assert
+    assert.Equal(t, 2, postCallCount, "Expected 2 postMessage calls for multiple batches")
+    mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestSendPushes_PostError_333(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postAttempted := false
+
+    rcpt := &push.Receipt{
+        To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}},
+        Payload: push.Payload{Topic:"grpTest"},
+    }
+
+    // Mock HTTP client to return error
+    originalClient := http.DefaultClient
+    http.DefaultClient = &http.Client{
+        Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+            postAttempted = true
+            // Ensure it's the push endpoint being called before erroring
+             if strings.HasSuffix(req.URL.Path, "/pushv1/"+config.OrgID) {
+                 return nil, errors.New("simulated post error")
+             }
+             // Allow other potential requests (though none expected here)
+             return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+        }),
+    }
+    t.Cleanup(func() { http.DefaultClient = originalClient })
+
+    // Set a dummy URL, the transport mock intercepts anyway
+    handler.pushUrl = "http://dummy-push.url/pushv1/" + config.OrgID
+
+    // Act
+    sendPushes(rcpt, config) // Should call postMessage, log the error, and break
+
+    // Assert
+    assert.True(t, postAttempted, "postMessage should have been attempted")
+    mockDev.AssertExpectations(t) // No store calls expected
+    // Note: We can't easily assert logs here without a logging framework mock
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:146:24: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:157:14: undefined: roundTripperFunc
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestSendPushes_BadHttpCode_444(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}},
+      Payload: push.Payload{Topic:"grpTest"},
+  }
+
+  // Mock HTTP Server to return bad status
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusForbidden) // Simulate rejection
+    json.NewEncoder(w).Encode(&batchResponse{FailureCount: 1, FatalCode: "auth-error"})
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+  // Act
+  sendPushes(rcpt, config) // Should call postMessage, log the status, and break
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed for full test
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestSendPushes_FatalError_555(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}}},
+      Payload: push.Payload{Topic:"grpTest"},
+  }
+
+  // Mock HTTP Server to return fatal error in response body
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // 200 OK, but body indicates fatal error
+    json.NewEncoder(w).Encode(&batchResponse{
+        FatalCode:    "quota-exceeded",
+        FatalMessage: "Push quota limit reached",
+        FailureCount: 1, // Assume the whole batch failed
+    })
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+  // Act
+  sendPushes(rcpt, config) // Should call postMessage, log the fatal error, and break
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed for full test
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_ChannelSub_101(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCalled := false
+    uid := types.ParseUid("usrSub1")
+    channel := "grpSubTest"
+    mockDevices := []string{"dsub1", "dsub2"}
+
+    // Mock store.Devices.Get used by fcm.DevicesForUser
+    mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsub1"}, {DeviceId: "dsub2"}}, nil).Once()
+
+    req := &push.ChannelReq{
+        Uid:     uid,
+        Channel: channel,
+        Unsub:   false,
+    }
+
+    // Mock HTTP Server for postMessage
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+        assert.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+
+        // Verify request body
+        gzr, err := gzip.NewReader(r.Body)
+        require.NoError(t, err)
+        defer gzr.Close()
+        bodyBytes, err := io.ReadAll(gzr)
+        require.NoError(t, err)
+        var reqBody subUnsubReq
+        err = json.Unmarshal(bodyBytes, &reqBody)
+        require.NoError(t, err)
+
+        assert.Equal(t, channel, reqBody.Channel)
+        assert.ElementsMatch(t, mockDevices, reqBody.Devices) // Use ElementsMatch for slice comparison
+        assert.False(t, reqBody.Unsub)
+        assert.Empty(t, reqBody.Device)
+        assert.Empty(t, reqBody.Channels)
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&batchResponse{httpCode: 200, SuccessCount: len(mockDevices)})
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += subsPath + "/" + config.OrgID
+    handler.subUrl = serverUrl.String()
+
+    // Act
+    processSubscription(req, config)
+
+    // Assert
+    assert.True(t, postCalled, "postMessage should have been called for channel sub")
+    mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_DeviceUnsub_202(t *testing.T) {
+  // Arrange
+  _, mockSub, config := setupTestEnv(t)
+  postCalled := false
+  uid := types.ParseUid("usrSub2")
+  deviceID := "dsub3"
+  mockChannels := []string{"grpSubA", "grpSubB", "p2pSubC"}
+
+  // Mock store.Subs.GetUserSubs used by fcm.ChannelsForUser
+  mockSub.On("GetUserSubs", uid, (*types.QueryOpt)(nil)).Return([]types.Subscription{
+      {Topic: "grpSubA", ModeGiven: types.ModeRead | types.ModeWrite | types.ModePres | types.ModeJoin}, // Ensure P access
+      {Topic: "grpSubB", ModeGiven: types.ModeRead | types.ModePres}, // P access missing
+      {Topic: "p2pSubC", ModeGiven: types.ModeRead | types.ModeWrite | types.ModePres | types.ModeJoin}, // Ensure P access
+  }, nil).Once()
+
+
+  req := &push.ChannelReq{
+    Uid:      uid,
+    DeviceID: deviceID,
+    Unsub:    true, // Test unsubscribe
+  }
+
+  // Mock HTTP Server for postMessage
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    assert.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+
+    gzr, err := gzip.NewReader(r.Body)
+    require.NoError(t, err)
+    defer gzr.Close()
+    bodyBytes, err := io.ReadAll(gzr)
+    require.NoError(t, err)
+    var reqBody subUnsubReq
+    err = json.Unmarshal(bodyBytes, &reqBody)
+    require.NoError(t, err)
+
+    assert.Equal(t, deviceID, reqBody.Device)
+    // fcm.ChannelsForUser only returns channels with Presence permission
+    assert.ElementsMatch(t, []string{"grpSubA", "p2pSubC"}, reqBody.Channels)
+    assert.True(t, reqBody.Unsub)
+    assert.Empty(t, reqBody.Channel)
+    assert.Empty(t, reqBody.Devices)
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(&batchResponse{httpCode: 200, SuccessCount: 2}) // Only 2 channels have P
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called for device unsub")
+  mockSub.AssertExpectations(t)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:24: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:149:2: declared and not used: mockChannels
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_NoDevicesOrChannels_303(t *testing.T) {
+  // Arrange
+  mockDev, mockSub, config := setupTestEnv(t)
+  postCalled := false // This should remain false
+
+  // Mock HTTP Server (should not be called)
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.WriteHeader(http.StatusInternalServerError) // Fail test if called
+  }))
+  defer server.Close()
+
+  // Set handler URL
+   var err error
+   serverUrl, err := url.Parse(server.URL)
+   require.NoError(t, err)
+   serverUrl.Path += subsPath + "/" + config.OrgID
+   handler.subUrl = serverUrl.String()
+
+  // --- Case 1: Channel sub, no devices ---
+  uid1 := types.ParseUid("usrNoDev")
+  reqChan := &push.ChannelReq{Uid: uid1, Channel: "grpTest"}
+  // Mock store.Devices.Get to return empty list
+  mockDev.On("Get", uid1).Return([]*types.DeviceDef{}, nil).Once()
+
+  // Act Case 1
+  processSubscription(reqChan, config)
+
+  // Assert Case 1
+  assert.False(t, postCalled, "postMessage should not be called for channel sub with no devices")
+  mockDev.AssertExpectations(t)
+  mockSub.AssertExpectations(t) // No Subs calls expected here
+
+  // --- Case 2: Device sub, no channels ---
+   uid2 := types.ParseUid("usrNoChan")
+   reqDev := &push.ChannelReq{Uid: uid2, DeviceID: "d3"}
+   // Mock store.Subs.GetUserSubs to return empty list
+   mockSub.On("GetUserSubs", uid2, (*types.QueryOpt)(nil)).Return([]types.Subscription{}, nil).Once()
+
+
+  // Act Case 2
+  processSubscription(reqDev, config)
+
+  // Assert Case 2
+  assert.False(t, postCalled, "postMessage should not be called for device sub with no channels")
+  mockDev.AssertExpectations(t) // Reset expectations if needed, or use separate tests
+  mockSub.AssertExpectations(t)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:30: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_TooManyDevices_404(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCalled := false
+    uid := types.ParseUid("usrBigDev")
+
+    // Generate more devices than batch size
+    numDevices := subBatchSize + 10
+    mockDeviceDefs := make([]*types.DeviceDef, numDevices)
+    expectedDeviceIDs := make([]string, subBatchSize) // Only first subBatchSize expected
+    for i := 0; i < numDevices; i++ {
+        devID := "dBig" + string(rune('a'+i))
+        mockDeviceDefs[i] = &types.DeviceDef{DeviceId: devID}
+        if i < subBatchSize {
+            expectedDeviceIDs[i] = devID
+        }
+    }
+
+    // Mock store.Devices.Get used by fcm.DevicesForUser
+    mockDev.On("Get", uid).Return(mockDeviceDefs, nil).Once()
+
+    req := &push.ChannelReq{
+        Uid:     uid,
+        Channel: "grpBig",
+        Unsub:   false,
+    }
+
+    // Mock HTTP Server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+
+        gzr, err := gzip.NewReader(r.Body)
+        require.NoError(t, err)
+        defer gzr.Close()
+        bodyBytes, err := io.ReadAll(gzr)
+        require.NoError(t, err)
+        var reqBody subUnsubReq
+        err = json.Unmarshal(bodyBytes, &reqBody)
+        require.NoError(t, err)
+
+        // Assert that devices were truncated to subBatchSize
+        assert.Len(t, reqBody.Devices, subBatchSize)
+        assert.ElementsMatch(t, expectedDeviceIDs, reqBody.Devices) // Check content
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(&batchResponse{httpCode: 200, SuccessCount: subBatchSize})
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += subsPath + "/" + config.OrgID
+    handler.subUrl = serverUrl.String()
+
+    // Act
+    processSubscription(req, config)
+
+    // Assert
+    assert.True(t, postCalled)
+    mockDev.AssertExpectations(t)
+    // Log verification needed to confirm warning about too many devices
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_PostError_505(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postAttempted := false
+  uid := types.ParseUid("usrSubErr")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubErr"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubErr"}
+
+  // Mock HTTP client to return error
+  originalClient := http.DefaultClient
+  http.DefaultClient = &http.Client{
+      Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+          postAttempted = true
+           // Ensure it's the sub endpoint being called
+           if strings.HasSuffix(r.URL.Path, "/sub/"+config.OrgID) {
+               return nil, errors.New("simulated sub network failure")
+           }
+            return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+      }),
+  }
+  t.Cleanup(func() { http.DefaultClient = originalClient })
+
+  // Set dummy handler URL
+  handler.subUrl = "http://dummy-sub.url/sub/" + config.OrgID
+
+  // Act
+  processSubscription(req, config) // Should call postMessage, log error, return
+
+  // Assert
+  assert.True(t, postAttempted, "postMessage should have been attempted for subscription")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:146:24: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:158:14: undefined: roundTripperFunc
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_BadHttpCode_606(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+  uid := types.ParseUid("usrSubBadHttp")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubBadHttp"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubBadHttp"}
+
+  // Mock HTTP Server to return bad status
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusServiceUnavailable) // Simulate server unavailable
+    json.NewEncoder(w).Encode(&batchResponse{FailureCount: 1, FatalCode: "server-busy"})
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+  // Act
+  processSubscription(req, config) // Should log error and return
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestProcessSubscription_FatalError_707(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+   uid := types.ParseUid("usrSubFatal")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubFatal"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubFatal"}
+
+  // Mock HTTP Server to return fatal error in response body
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // Status OK, but body indicates fatal error
+    json.NewEncoder(w).Encode(&batchResponse{
+        FatalCode:    "auth-invalid",
+        FatalMessage: "Invalid auth token provided",
+        FailureCount: 1,
+    })
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+
+  // Act
+  processSubscription(req, config) // Should log error and return
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:24: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_NoFailures_001(t *testing.T) {
+    // Arrange
+    mockDev, _ := setupTestEnv(t) // We need mockDev to assert no calls were made
+    batch := &batchResponse{SuccessCount: 2, FailureCount: 0} // No failures
+    messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+    uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+    // Act
+    handlePushResponse(batch, messages, uids) // Should return immediately
+
+    // Assert
+    mockDev.AssertExpectations(t) // Verifies that no methods (like Delete) were called on the mock
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:142:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common" // Need common for error codes
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_TransientErrors_002(t *testing.T) {
+    // Arrange
+    mockDev, _ := setupTestEnv(t)
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {ErrorCode: common.ErrorUnavailable, ErrorMessage: "Server busy"}, // Transient
+            {ErrorCode: common.ErrorInternal, ErrorMessage: "Internal issue"}, // Should not be processed
+        },
+    }
+    messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+    uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+    // Act
+    handlePushResponse(batch, messages, uids) // Should log and return after the first transient error
+
+    // Assert
+    mockDev.AssertExpectations(t) // No store calls expected because it returns early
+    // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Need common for error codes: "// Need common for error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_Token_003(t *testing.T) {
+    // Arrange
+    mockDev, _ := setupTestEnv(t)
+    uidToDelete := types.ParseUid("usrInvTok")
+    tokenToDelete := "invalidTokenAbc"
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 1,
+        Responses: []*tnpgResponse{
+            // Error specifically mentioning message.token
+            {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid registration token format: message.token", ErrorMessage: "Bad token format"},
+        },
+    }
+    messages := []*fcmv1.Message{{Token: tokenToDelete}} // The token associated with the error
+    uids := []types.Uid{uidToDelete} // The UID associated with the error
+
+    // Expect store.Devices.Delete to be called with the correct args
+    mockDev.On("Delete", uidToDelete, tokenToDelete).Return(nil).Once()
+
+    // Act
+    handlePushResponse(batch, messages, uids)
+
+    // Assert
+    mockDev.AssertExpectations(t) // Verify Delete was called as expected
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_Other_004(t *testing.T) {
+    // Arrange
+    mockDev, _ := setupTestEnv(t)
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 1,
+        Responses: []*tnpgResponse{
+            // Error NOT mentioning message.token
+            {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid payload format in message.data", ErrorMessage: "Bad payload structure"},
+        },
+    }
+    messages := []*fcmv1.Message{{Token: "validToken"}}
+    uids := []types.Uid{types.ParseUid("usrInvOther")}
+
+    // Act
+    handlePushResponse(batch, messages, uids)
+
+    // Assert
+    // Assert that Delete was *not* called. Since no mock expectation was set, AssertExpectations will pass if it wasn't called.
+    mockDev.AssertExpectations(t)
+    // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_TokenDeleteError_005(t *testing.T) {
+  // Arrange
+  mockDev, _ := setupTestEnv(t)
+  uidToDelete := types.ParseUid("usrInvTokDelErr")
+  tokenToDelete := "invalidTokenDef"
+  dbError := errors.New("simulated DB error on delete")
+
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid token: message.token", ErrorMessage: "Bad token"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called and return an error
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(dbError).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error should be logged internally
+
+  // Assert
+  mockDev.AssertExpectations(t) // Verify Delete was called
+  // Log verification needed to confirm the dbError was logged
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_ConfigError_006(t *testing.T) {
+  // Arrange
+  mockDev, _ := setupTestEnv(t)
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 2, // Multiple errors, but should stop after first config error
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorSenderIDMismatch, ErrorMessage: "Mismatch"},
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"}, // Should not be processed
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+  uids := []types.Uid{types.ParseUid("usrCfg1"), types.ParseUid("usrCfg2")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log config error and return
+
+  // Assert
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_Unregistered_007(t *testing.T) {
+  // Arrange
+  mockDev, _ := setupTestEnv(t)
+  uidToDelete := types.ParseUid("usrUnreg")
+  tokenToDelete := "unregisteredTokenGhi"
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired or unregistered"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(nil).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids)
+
+  // Assert
+  mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:143:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_Unregistered_DeleteError_008(t *testing.T) {
+  // Arrange
+  mockDev, _ := setupTestEnv(t)
+  uidToDelete := types.ParseUid("usrUnregDelErr")
+  tokenToDelete := "unregisteredTokenJkl"
+  dbError := errors.New("db error on unregistered delete")
+
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called and return an error
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(dbError).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error should be logged
+
+  // Assert
+  mockDev.AssertExpectations(t) // Verify Delete was called
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:145:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandlePushResponse_DefaultError_009(t *testing.T) {
+  // Arrange
+  mockDev, _ := setupTestEnv(t)
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: "some-new-unexpected-error", ErrorMessage: "A novel issue occurred"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}}
+  uids := []types.Uid{types.ParseUid("usrDefErr")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log the unrecognized error
+
+  // Assert
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:142:16: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Test Implementation:
+func TestHandleSubResponse_Failures_Devices_011(t *testing.T) {
+    // Arrange
+    uid := types.ParseUid("usrSubFailDev")
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {Index: 0, ErrorCode: "sub-dev-err-1", ErrorMessage: "Failed device 1"},
+            {Index: 1, ErrorCode: "sub-dev-err-2", ErrorMessage: "Failed device 2"},
+        },
+    }
+    req := &push.ChannelReq{Uid: uid} // Uid needed for logging
+    devices := []string{"dSubFail1", "dSubFail2"} // Devices corresponding to indices
+    channels := []string{}
+
+    // Act
+    handleSubResponse(batch, req, devices, channels) // Should log warnings for each failure
+
+    // Assert
+    // No external calls expected. Log verification needed to confirm warnings include device IDs 'dSubFail1' and 'dSubFail2'.
+}
+
+
+Error Message:
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+	panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x10498e960]
+
+goroutine 23 [running]:
+testing.tRunner.func1.2({0x105503c40, 0x1062e5ac0})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x105503c40?, 0x1062e5ac0?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).output(0x0?, 0x140002dccc0?, 0x140000b3cf8?, 0x1052002d8?)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:203 +0x30
+log.(*Logger).Println(0x105208177?, {0x140000b3d50?, 0x104805023?, 0x104804ff0?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:276 +0x48
+github.com/tinode/chat/server/push/tnpg.handleSubResponse(0x105ea0398?, 0x14000037e18, {0x14000037df8, 0x2, 0x105ea0398?}, {0x14000037df0, 0x0, 0x0?})
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg.go:327 +0x150
+github.com/tinode/chat/server/push/tnpg.TestHandleSubResponse_Failures_Devices_011(0x14000362340?)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg_test.go:170 +0x160
+testing.tRunner(0x14000362340, 0x105785f28)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server/push/tnpg	0.433s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Test Implementation:
+func TestHandleSubResponse_Failures_Channels_012(t *testing.T) {
+    // Arrange
+     uid := types.ParseUid("usrSubFailChan")
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {Index: 0, ErrorCode: "sub-chan-err-3", ErrorMessage: "Failed channel A"},
+            {Index: 1, ErrorCode: "sub-chan-err-4", ErrorMessage: "Failed channel B"},
+        },
+    }
+    req := &push.ChannelReq{Uid: uid} // Uid needed for logging
+    devices := []string{}
+    channels := []string{"grpSubFailA", "grpSubFailB"} // Channels corresponding to indices
+
+    // Act
+    handleSubResponse(batch, req, devices, channels) // Should log warnings for each failure
+
+    // Assert
+    // No external calls expected. Log verification needed to confirm warnings include channel names 'grpSubFailA' and 'grpSubFailB'.
+}
+
+
+Error Message:
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+	panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x100cea960]
+
+goroutine 23 [running]:
+testing.tRunner.func1.2({0x10185fc40, 0x102641ac0})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x10185fc40?, 0x102641ac0?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).output(0x0?, 0x140002dccc0?, 0x140000b3cf8?, 0x10155c2d8?)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:203 +0x30
+log.(*Logger).Println(0x10156616a?, {0x140000b3d50?, 0x100b61023?, 0x100b60ff0?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:276 +0x48
+github.com/tinode/chat/server/push/tnpg.handleSubResponse(0x1021fc398?, 0x14000037e18, {0x14000037df0, 0x0, 0x1021fc398?}, {0x14000037df8, 0x2, 0x0?})
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg.go:327 +0x150
+github.com/tinode/chat/server/push/tnpg.TestHandleSubResponse_Failures_Channels_012(0x14000352340?)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-688598614/server/push/tnpg/push_tnpg_test.go:170 +0x160
+testing.tRunner(0x14000352340, 0x101ae1f28)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server/push/tnpg	0.434s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+go get github.com/stretchr/testify/mock
+
+Test Implementation:
+func TestHandler_PushChannelReturns_Initialized_789(t *testing.T) {
+    // Arrange
+    // Use setupTestEnv to ensure handler is initialized correctly
+    setupTestEnv(t)
+
+    // Capture the channels created during Init
+    expectedInputChan := handler.input
+    expectedChannelChan := handler.channel
+
+    // Act
+    pushChan := handler.Push()
+    channelChan := handler.Channel()
+
+    // Assert
+    require.NotNil(t, expectedInputChan, "Handler input channel should be initialized")
+    require.NotNil(t, expectedChannelChan, "Handler channel channel should be initialized")
+    assert.Same(t, expectedInputChan, pushChan, "Push() should return the initialized input channel")
+    assert.Same(t, expectedChannelChan, channelChan, "Channel() should return the initialized channel channel")
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:157:2: undefined: setupTestEnv
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestHandlerInit_JsonError_999(t *testing.T) {
+  // Arrange
+  invalidJson := json.RawMessage(`{"enabled": true, "org": "test, "token": "abc"}`) // Missing closing quote for org
+  originalHandler := handler // Backup original state if needed
+
+  // Act
+  success, err := handler.Init(invalidJson)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Contains(t, err.Error(), "failed to parse config")
+  assert.Contains(t, err.Error(), "invalid character") // Underlying JSON error
+  // Ensure handler state wasn't partially initialized
+  assert.Nil(t, handler.input)
+  assert.Nil(t, handler.channel)
+  assert.Nil(t, handler.stop)
+
+  handler = originalHandler // Restore if necessary
+}
+
+
+Error Message:
+FAIL
+coverage: 40.6% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.431s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestHandlerInit_UrlParseError_888(t *testing.T) {
+  // Arrange
+  // Use an invalid control character in the debug host to cause url.Parse error
+  config := configType{Enabled: true, OrgID: "testOrg", DebugPushGWHost: "http://host\x7f/"}
+  jsonConfig, _ := json.Marshal(config)
+  originalHandler := handler
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Contains(t, err.Error(), "invalid control character in URL") // Check for url.Parse specific error message
+  assert.Nil(t, handler.input)
+  assert.Nil(t, handler.channel)
+  assert.Nil(t, handler.stop)
+
+  handler = originalHandler // Restore if necessary
+}
+
+
+Error Message:
+FAIL
+coverage: 41.4% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.455s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"net/http"
+    "net/http/httptest"
+	"compress/gzip"
+    "io"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+    "github.com/tinode/chat/server/store/types"
+	pfcm "github.com/tinode/chat/server/push/fcm"
+    "github.com/tinode/chat/server/push/common"
+	fcmv1 "google.golang.org/api/fcm/v1"
+    "os"
+    "time"
+    "bytes"
+    "net/url"
+    "strings"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestHandlerInit_Disabled_777(t *testing.T) {
+  // Arrange
+  config := configType{Enabled: false, OrgID: "testOrg"} // Explicitly disabled
+  jsonConfig, _ := json.Marshal(config)
+  originalHandler := handler
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.NoError(t, err)
+  assert.False(t, success) // Should return false when disabled
+  assert.Nil(t, handler.input, "Input channel should be nil when disabled")
+  assert.Nil(t, handler.channel, "Channel channel should be nil when disabled")
+  assert.Nil(t, handler.stop, "Stop channel should be nil when disabled")
+
+  handler = originalHandler // Restore if necessary
+}
+
+
+Error Message:
+FAIL
+coverage: 40.6% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.437s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/push" // Import push for Handler type reference if needed
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+
+Test Implementation:
+func TestHandlerIsReady_NotInitialized_555(t *testing.T) {
+  // Arrange
+  // Ensure handler is in a non-initialized state (input channel is nil)
+  originalHandler := handler
+  handler = Handler{} // Reset to zero state
+  t.Cleanup(func() { handler = originalHandler })
+
+
+  // Act
+  ready := handler.IsReady()
+
+  // Assert
+  assert.False(t, ready)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import push for Handler type reference if needed: "// Import push for Handler type reference if needed" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+Iteration-5
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "encoding/json"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestHandlerInit_EmptyOrgID_111(t *testing.T) {
+  // Arrange
+  config := configType{
+    Enabled:   true,
+    OrgID:     "   ", // Whitespace only
+    AuthToken: "testToken",
+  }
+  jsonConfig, err := json.Marshal(config)
+  require.NoError(t, err)
+  originalHandler := handler
+  t.Cleanup(func(){ handler = originalHandler })
+
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Equal(t, "organization name is missing", err.Error())
+  assert.Nil(t, handler.input)
+}
+
+
+Error Message:
+FAIL
+coverage: 41.4% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.783s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "encoding/json"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestHandlerInit_JsonError_999(t *testing.T) {
+  // Arrange
+  invalidJson := json.RawMessage(`{"enabled": true, "org": "test, "token": "abc"}`) // Missing closing quote for org
+  originalHandler := handler // Backup original state
+  t.Cleanup(func() { handler = originalHandler }) // Restore
+
+  // Act
+  success, err := handler.Init(invalidJson)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  assert.Contains(t, err.Error(), "failed to parse config")
+  assert.Contains(t, err.Error(), "invalid character") // Underlying JSON error
+  // Ensure handler state wasn't partially initialized
+  assert.Nil(t, handler.input)
+  assert.Nil(t, handler.channel)
+  assert.Nil(t, handler.stop)
+}
+
+
+Error Message:
+FAIL
+coverage: 42.1% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.713s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "encoding/json"
+  "testing"
+  "net/url" // For checking error type if needed
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestHandlerInit_UrlParseError_888(t *testing.T) {
+  // Arrange
+  // Use an invalid control character in the debug host to cause url.Parse error
+  config := configType{Enabled: true, OrgID: "testOrg", DebugPushGWHost: "http://host\x7f/"}
+  jsonConfig, err := json.Marshal(config)
+  require.NoError(t, err)
+  originalHandler := handler
+  t.Cleanup(func() { handler = originalHandler })
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.Error(t, err)
+  assert.False(t, success)
+  // Error message might vary slightly depending on Go version, check for core part
+  assert.Contains(t, err.Error(), "invalid control character in URL")
+  assert.Nil(t, handler.input)
+  assert.Nil(t, handler.channel)
+  assert.Nil(t, handler.stop)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For checking error type if needed: "// For checking error type if needed" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "encoding/json"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestHandlerInit_Disabled_777(t *testing.T) {
+  // Arrange
+  config := configType{Enabled: false, OrgID: "testOrg"} // Explicitly disabled
+  jsonConfig, err := json.Marshal(config)
+  require.NoError(t, err)
+  originalHandler := handler
+  t.Cleanup(func() { handler = originalHandler })
+
+  // Act
+  success, err := handler.Init(jsonConfig)
+
+  // Assert
+  require.NoError(t, err)
+  assert.False(t, success, "Init should return false when disabled")
+  assert.Nil(t, handler.input, "Input channel should be nil when disabled")
+  assert.Nil(t, handler.channel, "Channel channel should be nil when disabled")
+  assert.Nil(t, handler.stop, "Stop channel should be nil when disabled")
+}
+
+
+Error Message:
+FAIL
+coverage: 42.1% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.734s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+)
+
+Test Implementation:
+func TestHandler_PushChannelReturns_Initialized_789(t *testing.T) {
+  // Arrange
+  // Initialize handler to create channels
+  cfg := configType{Enabled: true, OrgID: "testReturn", AuthToken: "token"}
+  jsonCfg, _ := json.Marshal(cfg)
+  originalHandler := handler
+  t.Cleanup(func() {
+      if handler.stop != nil {
+          handler.Stop()
+          time.Sleep(10 * time.Millisecond)
+      }
+      handler = originalHandler
+  })
+  _, err := handler.Init(jsonCfg)
+  require.NoError(t, err)
+
+
+  // Capture the channels created during Init
+  expectedInputChan := handler.input
+  expectedChannelChan := handler.channel
+
+  // Act
+  pushChan := handler.Push()
+  channelChan := handler.Channel()
+
+  // Assert
+  require.NotNil(t, expectedInputChan, "Handler input channel should be initialized")
+  require.NotNil(t, expectedChannelChan, "Handler channel channel should be initialized")
+  assert.Same(t, expectedInputChan, pushChan, "Push() should return the initialized input channel")
+  assert.Same(t, expectedChannelChan, channelChan, "Channel() should return the initialized channel channel")
+}
+
+
+Error Message:
+FAIL
+coverage: 42.9% of statements
+FAIL	github.com/tinode/chat/server/push/tnpg	0.725s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"errors"
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestPostMessage_HttpDoError_987(t *testing.T) {
+  // Arrange
+  // Mock the HTTP client to return an error
+  originalClient := http.DefaultClient
+  http.DefaultClient = &http.Client{
+    Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+      return nil, errors.New("simulated network error")
+    }),
+  }
+  t.Cleanup(func() { http.DefaultClient = originalClient }) // Restore default client
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage("http://valid-looking-url.com", body, config) // URL doesn't matter due to mock transport
+
+  // Assert
+  require.Error(t, err)
+  assert.Contains(t, err.Error(), "simulated network error")
+  assert.Nil(t, resp)
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:199:14: undefined: roundTripperFunc
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestPostMessage_ResponseDecodeError_753(t *testing.T) {
+  // Arrange
+  initTestLogging(t) // Ensure logs.Warn is initialized
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    _, _ = w.Write([]byte(`{"invalid json`)) // Malformed JSON
+  }))
+  defer server.Close()
+  originalClient := http.DefaultClient
+  http.DefaultClient = server.Client()
+  t.Cleanup(func() { http.DefaultClient = originalClient })
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage(server.URL, body, config)
+
+  // Assert
+  require.NoError(t, err, "postMessage should not return the decode error directly")
+  require.NotNil(t, resp, "Response object should still be returned")
+  assert.Equal(t, http.StatusOK, resp.httpCode)
+  // The batchResponse struct will have default zero values as decoding failed
+  assert.Equal(t, 0, resp.SuccessCount)
+  assert.Equal(t, 0, resp.FailureCount)
+  assert.Empty(t, resp.FatalCode)
+  assert.Empty(t, resp.FatalMessage)
+  assert.Nil(t, resp.Responses)
+  // Ideally, also check logs for the warning about decode failure
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:194:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "net/http"
+  "net/http/httptest"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+)
+
+Test Implementation:
+func TestPostMessage_GzipReaderError_333(t *testing.T) {
+  // Arrange
+  initTestLogging(t) // Ensure logs.Warn is initialized
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Encoding", "gzip") // Claim it's gzip
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    _, _ = w.Write([]byte("this is not gzip data")) // Send invalid data
+  }))
+  defer server.Close()
+  originalClient := http.DefaultClient
+  http.DefaultClient = server.Client()
+  t.Cleanup(func() { http.DefaultClient = originalClient })
+
+  body := map[string]string{"key": "value"}
+  config := &configType{AuthToken: "testToken"}
+
+  // Act
+  resp, err := postMessage(server.URL, body, config)
+
+  // Assert
+  require.NoError(t, err, "postMessage should not return the gzip reader error directly")
+  require.NotNil(t, resp, "Response object should still be returned")
+  assert.Equal(t, http.StatusOK, resp.httpCode)
+  // The batchResponse struct will have default zero values as decoding failed
+  assert.Equal(t, 0, resp.SuccessCount)
+  assert.Equal(t, 0, resp.FailureCount)
+  assert.Empty(t, resp.FatalCode)
+  // Ideally, also check logs for the warning about decode/gzip failure
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:194:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store/types"
+	fcmv1 "google.golang.org/api/fcm/v1" // Needed for handlePushResponse signature
+	"github.com/tinode/chat/server/push/common" // Needed for handlePushResponse codes
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestSendPushes_Success_1Batch_111(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t) // Setup mocks and initialize handler
+  postCalled := false
+  initTestLogging(t)
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{
+          types.ParseUid("usr1"): {Devices: []string{"d1"}, Unread: 1},
+      },
+      // Provide necessary payload fields for fcm.PrepareV1Notifications
+      Payload: push.Payload{Topic: "grpTest", SeqId: 1, From:"usr2", What: "msg", Timestamp: time.Now()},
+  }
+
+  // Mock HTTP Server for postMessage
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+      postCalled = true
+      require.Equal(t, "/pushv1/"+config.OrgID, r.URL.Path)
+      // Check that the body contains one message (simplified check)
+       gzr, err := gzip.NewReader(r.Body)
+       require.NoError(t, err)
+       defer gzr.Close()
+       bodyBytes, err := io.ReadAll(gzr)
+       require.NoError(t, err)
+       var payloads []json.RawMessage
+       err = json.Unmarshal(bodyBytes, &payloads)
+       require.NoError(t, err)
+       assert.Len(t, payloads, 1)
+
+      w.Header().Set("Content-Encoding", "gzip") // TNPG GW likely responds with gzip
+      w.Header().Set("Content-Type", "application/json")
+      w.WriteHeader(http.StatusOK)
+      // Response indicating success, no failures to trigger handlePushResponse actions
+      respBody := &batchResponse{
+          SuccessCount: 1,
+          FailureCount: 0,
+          Responses:    []*tnpgResponse{{MessageID: "msg1"}},
+      }
+      buf := new(bytes.Buffer)
+      gzw := gzip.NewWriter(buf)
+      err = json.NewEncoder(gzw).Encode(respBody)
+      require.NoError(t, err)
+      gzw.Close()
+      _, err = w.Write(buf.Bytes())
+      require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL to use the test server
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+  // Act
+  sendPushes(rcpt, config) // This calls fcm.PrepareV1Notifications -> postMessage -> handlePushResponse
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t) // Ensure no unexpected store calls (like Delete)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Needed for handlePushResponse codes: "// Needed for handlePushResponse codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "io"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+  "time"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1" // Needed for handlePushResponse signature
+	"github.com/tinode/chat/server/push/common" // Needed for handlePushResponse codes
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestSendPushes_MultipleBatches_222(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCallCount := 0
+    initTestLogging(t)
+
+    // Create enough recipients to require multiple batches
+    rcpt := &push.Receipt{To: make(map[types.Uid]push.Recipient), Payload: push.Payload{Topic:"bigGrp", SeqId: 1, From:"usrBig"}}
+    numMessages := pushBatchSize + 5
+    for i := 0; i < numMessages; i++ {
+        // Ensure unique UIDs for fcm preparation logic
+        uidStr := "usr" + string(rune('a'+(i/26))) + string(rune('a'+(i%26)))
+        uid := types.ParseUid(uidStr)
+        // Use consistent device ID pattern for simplicity
+        rcpt.To[uid] = push.Recipient{Devices: []string{"d" + string(rune('a'+i))}, Unread: 1}
+    }
+
+
+    // Mock HTTP Server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCallCount++
+         gzr, err := gzip.NewReader(r.Body)
+         require.NoError(t, err)
+         defer gzr.Close()
+         bodyBytes, err := io.ReadAll(gzr)
+         require.NoError(t, err)
+         var payloads []json.RawMessage
+         err = json.Unmarshal(bodyBytes, &payloads)
+         require.NoError(t, err)
+
+        expectedLen := pushBatchSize
+        if postCallCount == 2 {
+            expectedLen = 5
+        }
+        assert.Len(t, payloads, expectedLen, "Batch %d size mismatch", postCallCount)
+
+        w.Header().Set("Content-Encoding", "gzip")
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        // Assume all succeed
+        respBody := &batchResponse{SuccessCount: len(payloads)}
+        buf := new(bytes.Buffer)
+        gzw := gzip.NewWriter(buf)
+        err = json.NewEncoder(gzw).Encode(respBody)
+        require.NoError(t, err)
+        gzw.Close()
+        _, err = w.Write(buf.Bytes())
+        require.NoError(t, err)
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += pushPath + "/" + config.OrgID
+    handler.pushUrl = serverUrl.String()
+
+    // Act
+    sendPushes(rcpt, config)
+
+    // Assert
+    assert.Equal(t, 2, postCallCount, "Expected 2 postMessage calls for multiple batches")
+    mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Needed for handlePushResponse codes: "// Needed for handlePushResponse codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "errors"
+  "io"
+  "net/http"
+  "strings"
+  "testing"
+  "time"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1" // Needed for handlePushResponse signature
+	"github.com/tinode/chat/server/push/common" // Needed for handlePushResponse codes
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestSendPushes_PostError_333(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postAttempted := false
+    initTestLogging(t)
+
+    rcpt := &push.Receipt{
+        To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}, Unread: 1}},
+        Payload: push.Payload{Topic:"grpTest", SeqId: 1, From:"usr2"},
+    }
+
+    // Mock HTTP client to return error
+    originalClient := http.DefaultClient
+    http.DefaultClient = &http.Client{
+        Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+            postAttempted = true
+            // Ensure it's the push endpoint being called before erroring
+             if strings.HasSuffix(req.URL.Path, "/pushv1/"+config.OrgID) {
+                 return nil, errors.New("simulated post error")
+             }
+             // Allow other potential requests (though none expected here)
+             return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+        }),
+    }
+    t.Cleanup(func() { http.DefaultClient = originalClient })
+
+    // Set a dummy URL, the transport mock intercepts anyway
+    handler.pushUrl = "http://dummy-push.url/pushv1/" + config.OrgID
+
+    // Act
+    sendPushes(rcpt, config) // Should call postMessage, log the error, and break
+
+    // Assert
+    assert.True(t, postAttempted, "postMessage should have been attempted")
+    mockDev.AssertExpectations(t) // No store calls expected
+    // Note: We can't easily assert logs here without a logging framework mock
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Needed for handlePushResponse codes: "// Needed for handlePushResponse codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+  "time"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1" // Needed for handlePushResponse signature
+	"github.com/tinode/chat/server/push/common" // Needed for handlePushResponse codes
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestSendPushes_BadHttpCode_444(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+  initTestLogging(t)
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}, Unread: 1}},
+      Payload: push.Payload{Topic:"grpTest", SeqId: 1, From:"usr2"},
+  }
+
+  // Mock HTTP Server to return bad status
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Encoding", "gzip")
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusForbidden) // Simulate rejection
+
+    // Even with non-200, TNPG might return a body
+    respBody := &batchResponse{FailureCount: 1, FatalCode: "auth-error"}
+    buf := new(bytes.Buffer)
+    gzw := gzip.NewWriter(buf)
+    err := json.NewEncoder(gzw).Encode(respBody)
+    require.NoError(t, err)
+    gzw.Close()
+    _, err = w.Write(buf.Bytes())
+    require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+  // Act
+  sendPushes(rcpt, config) // Should call postMessage, log the status, and break
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed for full test
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Needed for handlePushResponse codes: "// Needed for handlePushResponse codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+  "time"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1" // Needed for handlePushResponse signature
+	"github.com/tinode/chat/server/push/common" // Needed for handlePushResponse codes
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestSendPushes_FatalError_555(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+  initTestLogging(t)
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{types.ParseUid("usr1"): {Devices: []string{"d1"}, Unread: 1}},
+      Payload: push.Payload{Topic:"grpTest", SeqId: 1, From:"usr2"},
+  }
+
+  // Mock HTTP Server to return fatal error in response body
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Encoding", "gzip")
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // 200 OK, but body indicates fatal error
+    respBody := &batchResponse{
+        FatalCode:    "quota-exceeded",
+        FatalMessage: "Push quota limit reached",
+        FailureCount: 1, // Assume the whole batch failed
+    }
+    buf := new(bytes.Buffer)
+    gzw := gzip.NewWriter(buf)
+    err := json.NewEncoder(gzw).Encode(respBody)
+    require.NoError(t, err)
+    gzw.Close()
+    _, err = w.Write(buf.Bytes())
+    require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+  // Act
+  sendPushes(rcpt, config) // Should call postMessage, log the fatal error, and break
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed for full test
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Needed for handlePushResponse codes: "// Needed for handlePushResponse codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+  "time"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestSendPushes_EmptyReceipt_444(t *testing.T) {
+  // Arrange
+  _, _, config := setupTestEnv(t) // Need config but no mocks needed
+  initTestLogging(t)
+  postCalled := false
+
+  rcpt := &push.Receipt{
+    To:      map[types.Uid]push.Recipient{}, // Empty map
+    Payload: push.Payload{Topic: "grpTest", SeqId: 1, From: "usr2"},
+  }
+
+  // Mock HTTP Server (should not be called)
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    t.Error("postMessage should not be called for empty recipient list")
+    w.WriteHeader(http.StatusInternalServerError)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String()
+
+
+  // Act
+  sendPushes(rcpt, config)
+
+  // Assert
+  assert.False(t, postCalled, "postMessage should not have been called")
+  // Mocks should have no expectations set or asserted.
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:196:18: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:197:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "io"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+  "github.com/tinode/chat/server/store/types"
+  mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_ChannelSub_101(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCalled := false
+    initTestLogging(t)
+    uid := types.ParseUid("usrSub1")
+    channel := "grpSubTest"
+    mockDevices := []string{"dsub1", "dsub2"}
+
+    // Mock store.Devices.Get used by fcm.DevicesForUser
+    mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsub1"}, {DeviceId: "dsub2"}}, nil).Once()
+
+    req := &push.ChannelReq{
+        Uid:     uid,
+        Channel: channel,
+        Unsub:   false,
+    }
+
+    // Mock HTTP Server for postMessage
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+        require.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+
+        // Verify request body
+        gzr, err := gzip.NewReader(r.Body)
+        require.NoError(t, err)
+        defer gzr.Close()
+        bodyBytes, err := io.ReadAll(gzr)
+        require.NoError(t, err)
+        var reqBody subUnsubReq
+        err = json.Unmarshal(bodyBytes, &reqBody)
+        require.NoError(t, err)
+
+        assert.Equal(t, channel, reqBody.Channel)
+        assert.ElementsMatch(t, mockDevices, reqBody.Devices) // Use ElementsMatch for slice comparison
+        assert.False(t, reqBody.Unsub)
+        assert.Empty(t, reqBody.Device)
+        assert.Empty(t, reqBody.Channels)
+
+        w.Header().Set("Content-Encoding", "gzip")
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        respBody := &batchResponse{SuccessCount: len(mockDevices)}
+        buf := new(bytes.Buffer)
+        gzw := gzip.NewWriter(buf)
+        err = json.NewEncoder(gzw).Encode(respBody)
+        require.NoError(t, err)
+        gzw.Close()
+        _, err = w.Write(buf.Bytes())
+        require.NoError(t, err)
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += subsPath + "/" + config.OrgID
+    handler.subUrl = serverUrl.String()
+
+    // Act
+    processSubscription(req, config)
+
+    // Assert
+    assert.True(t, postCalled, "postMessage should have been called for channel sub")
+    mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "io"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+  "github.com/tinode/chat/server/store/types"
+  mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_DeviceUnsub_202(t *testing.T) {
+  // Arrange
+  _, mockSub, config := setupTestEnv(t)
+  postCalled := false
+  initTestLogging(t)
+  uid := types.ParseUid("usrSub2")
+  deviceID := "dsub3"
+  // Define which channels the mock store will return
+  returnedSubs := []types.Subscription{
+      {Topic: "grpSubA", ModeGiven: types.ModeRead | types.ModeWrite | types.ModePres | types.ModeJoin}, // Ensure P access
+      {Topic: "grpSubB", ModeGiven: types.ModeRead | types.ModePres}, // P access present
+      {Topic: "p2pSubC", ModeGiven: types.ModeRead | types.ModeWrite | types.ModeJoin}, // P access missing
+  }
+  // Define the channels expected in the request (those with 'P' access)
+  expectedChannels := []string{"grpSubA", "grpSubB"}
+
+  // Mock store.Subs.GetUserSubs used by fcm.ChannelsForUser
+  mockSub.On("GetUserSubs", uid, (*types.QueryOpt)(nil)).Return(returnedSubs, nil).Once()
+
+  req := &push.ChannelReq{
+    Uid:      uid,
+    DeviceID: deviceID,
+    Unsub:    true, // Test unsubscribe
+  }
+
+  // Mock HTTP Server for postMessage
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    require.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+
+    gzr, err := gzip.NewReader(r.Body)
+    require.NoError(t, err)
+    defer gzr.Close()
+    bodyBytes, err := io.ReadAll(gzr)
+    require.NoError(t, err)
+    var reqBody subUnsubReq
+    err = json.Unmarshal(bodyBytes, &reqBody)
+    require.NoError(t, err)
+
+    assert.Equal(t, deviceID, reqBody.Device)
+    // fcm.ChannelsForUser only returns channels with Presence permission
+    assert.ElementsMatch(t, expectedChannels, reqBody.Channels)
+    assert.True(t, reqBody.Unsub)
+    assert.Empty(t, reqBody.Channel)
+    assert.Empty(t, reqBody.Devices)
+
+    w.Header().Set("Content-Encoding", "gzip")
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    respBody := &batchResponse{SuccessCount: len(expectedChannels)} // Should match expected channels
+    buf := new(bytes.Buffer)
+    gzw := gzip.NewWriter(buf)
+    err = json.NewEncoder(gzw).Encode(respBody)
+    require.NoError(t, err)
+    gzw.Close()
+    _, err = w.Write(buf.Bytes())
+    require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+  // Act
+  processSubscription(req, config)
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called for device unsub")
+  mockSub.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+	"github.com/tinode/chat/server/store/types"
+	mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_NoDevicesOrChannels_303(t *testing.T) {
+  // Arrange
+  mockDev, mockSub, config := setupTestEnv(t)
+  postCalled := false // This should remain false
+  initTestLogging(t)
+
+  // Mock HTTP Server (should not be called)
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    t.Error("postMessage should not have been called")
+    w.WriteHeader(http.StatusInternalServerError) // Fail test if called
+  }))
+  defer server.Close()
+
+  // Set handler URL
+   var err error
+   serverUrl, err := url.Parse(server.URL)
+   require.NoError(t, err)
+   serverUrl.Path += subsPath + "/" + config.OrgID
+   handler.subUrl = serverUrl.String()
+
+  // --- Case 1: Channel sub, no devices ---
+  uid1 := types.ParseUid("usrNoDev")
+  reqChan := &push.ChannelReq{Uid: uid1, Channel: "grpTest"}
+  // Mock store.Devices.Get to return empty list
+  mockDev.On("Get", uid1).Return([]*types.DeviceDef{}, nil).Once()
+
+  // Act Case 1
+  processSubscription(reqChan, config)
+
+  // Assert Case 1
+  assert.False(t, postCalled, "postMessage should not be called for channel sub with no devices")
+  mockDev.AssertExpectations(t)
+
+
+  // --- Case 2: Device sub, no channels ---
+   uid2 := types.ParseUid("usrNoChan")
+   reqDev := &push.ChannelReq{Uid: uid2, DeviceID: "d3"}
+   // Mock store.Subs.GetUserSubs to return empty list (or list without P access)
+   mockSub.On("GetUserSubs", uid2, (*types.QueryOpt)(nil)).Return([]types.Subscription{}, nil).Once()
+
+
+  // Act Case 2
+  processSubscription(reqDev, config)
+
+  // Assert Case 2
+  assert.False(t, postCalled, "postMessage should not be called for device sub with no channels")
+  mockSub.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "io"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+  "github.com/tinode/chat/server/store/types"
+  mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_TooManyDevices_404(t *testing.T) {
+    // Arrange
+    mockDev, _, config := setupTestEnv(t)
+    postCalled := false
+    initTestLogging(t) // Ensure logs.Warn is initialized
+    uid := types.ParseUid("usrBigDev")
+
+    // Generate more devices than batch size
+    numDevices := subBatchSize + 10
+    mockDeviceDefs := make([]*types.DeviceDef, numDevices)
+    expectedDeviceIDs := make([]string, subBatchSize) // Only first subBatchSize expected
+    for i := 0; i < numDevices; i++ {
+         // Ensure unique device IDs
+        devID := "dBig" + string(rune('a'+(i/26))) + string(rune('a'+(i%26)))
+        mockDeviceDefs[i] = &types.DeviceDef{DeviceId: devID}
+        if i < subBatchSize {
+            expectedDeviceIDs[i] = devID
+        }
+    }
+
+    // Mock store.Devices.Get used by fcm.DevicesForUser
+    mockDev.On("Get", uid).Return(mockDeviceDefs, nil).Once()
+
+    req := &push.ChannelReq{
+        Uid:     uid,
+        Channel: "grpBig",
+        Unsub:   false,
+    }
+
+    // Mock HTTP Server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        postCalled = true
+
+        gzr, err := gzip.NewReader(r.Body)
+        require.NoError(t, err)
+        defer gzr.Close()
+        bodyBytes, err := io.ReadAll(gzr)
+        require.NoError(t, err)
+        var reqBody subUnsubReq
+        err = json.Unmarshal(bodyBytes, &reqBody)
+        require.NoError(t, err)
+
+        // Assert that devices were truncated to subBatchSize
+        assert.Len(t, reqBody.Devices, subBatchSize)
+        assert.ElementsMatch(t, expectedDeviceIDs, reqBody.Devices) // Check content
+
+        w.Header().Set("Content-Encoding", "gzip")
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        respBody := &batchResponse{SuccessCount: subBatchSize}
+        buf := new(bytes.Buffer)
+        gzw := gzip.NewWriter(buf)
+        err = json.NewEncoder(gzw).Encode(respBody)
+        require.NoError(t, err)
+        gzw.Close()
+        _, err = w.Write(buf.Bytes())
+        require.NoError(t, err)
+    }))
+    defer server.Close()
+
+    // Set handler URL
+    var err error
+    serverUrl, err := url.Parse(server.URL)
+    require.NoError(t, err)
+    serverUrl.Path += subsPath + "/" + config.OrgID
+    handler.subUrl = serverUrl.String()
+
+    // Act
+    processSubscription(req, config)
+
+    // Assert
+    assert.True(t, postCalled)
+    mockDev.AssertExpectations(t)
+    // Log verification needed to confirm warning about too many devices
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"bytes"
+	"errors"
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+	"github.com/tinode/chat/server/store/types"
+	mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_PostError_505(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postAttempted := false
+  initTestLogging(t)
+  uid := types.ParseUid("usrSubErr")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubErr"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubErr"}
+
+  // Mock HTTP client to return error
+  originalClient := http.DefaultClient
+  http.DefaultClient = &http.Client{
+      Transport: roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+          postAttempted = true
+           // Ensure it's the sub endpoint being called
+           if strings.HasSuffix(r.URL.Path, "/sub/"+config.OrgID) {
+               return nil, errors.New("simulated sub network failure")
+           }
+            // Allow other potential requests (though none expected here)
+             return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+      }),
+  }
+  t.Cleanup(func() { http.DefaultClient = originalClient })
+
+  // Set dummy handler URL
+  handler.subUrl = "http://dummy-sub.url/sub/" + config.OrgID
+
+  // Act
+  processSubscription(req, config) // Should call postMessage, log error, return
+
+  // Assert
+  assert.True(t, postAttempted, "postMessage should have been attempted for subscription")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+  "github.com/tinode/chat/server/store/types"
+  mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_BadHttpCode_606(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+  initTestLogging(t)
+  uid := types.ParseUid("usrSubBadHttp")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubBadHttp"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubBadHttp"}
+
+  // Mock HTTP Server to return bad status
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Encoding", "gzip")
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusServiceUnavailable) // Simulate server unavailable
+    respBody := &batchResponse{FailureCount: 1, FatalCode: "server-busy"}
+    buf := new(bytes.Buffer)
+    gzw := gzip.NewWriter(buf)
+    err := json.NewEncoder(gzw).Encode(respBody)
+    require.NoError(t, err)
+    gzw.Close()
+    _, err = w.Write(buf.Bytes())
+    require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+  // Act
+  processSubscription(req, config) // Should log error and return
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "bytes"
+  "compress/gzip"
+  "encoding/json"
+  "net/http"
+  "net/http/httptest"
+  "net/url"
+  "testing"
+
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store" // Import for store interface types if needed by mocks
+  "github.com/tinode/chat/server/store/types"
+  mocks "github.com/tinode/chat/mocks/server/store" // Import mock store
+)
+
+Test Implementation:
+func TestProcessSubscription_FatalError_707(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t)
+  postCalled := false
+  initTestLogging(t)
+  uid := types.ParseUid("usrSubFatal")
+
+  // Mock store.Devices.Get used by fcm.DevicesForUser
+  mockDev.On("Get", uid).Return([]*types.DeviceDef{{DeviceId: "dsubFatal"}}, nil).Once()
+
+  req := &push.ChannelReq{Uid: uid, Channel: "grpSubFatal"}
+
+  // Mock HTTP Server to return fatal error in response body
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    postCalled = true
+    w.Header().Set("Content-Encoding", "gzip")
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK) // Status OK, but body indicates fatal error
+    respBody := &batchResponse{
+        FatalCode:    "auth-invalid",
+        FatalMessage: "Invalid auth token provided",
+        FailureCount: 1,
+    }
+     buf := new(bytes.Buffer)
+     gzw := gzip.NewWriter(buf)
+     err := json.NewEncoder(gzw).Encode(respBody)
+     require.NoError(t, err)
+     gzw.Close()
+     _, err = w.Write(buf.Bytes())
+     require.NoError(t, err)
+  }))
+  defer server.Close()
+
+  // Set handler URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String()
+
+
+  // Act
+  processSubscription(req, config) // Should log error and return
+
+  // Assert
+  assert.True(t, postCalled, "postMessage should have been called")
+  mockDev.AssertExpectations(t)
+  // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Import for store interface types if needed by mocks: "// Import for store interface types if needed by mocks" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/stretchr/testify/assert" // Use require if needed
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  // No mocks needed if no store interaction expected
+   mocks "github.com/tinode/chat/mocks/server/store"
+   "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_NoFailures_001(t *testing.T) {
+    // Arrange
+    // No mocks needed as no store calls should happen
+    mockDev, _, _ := setupTestEnv(t) // Still call setup for consistency if needed elsewhere
+    initTestLogging(t)
+    batch := &batchResponse{SuccessCount: 2, FailureCount: 0} // No failures
+    messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+    uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+    // Act
+    handlePushResponse(batch, messages, uids) // Should return immediately
+
+    // Assert
+    mockDev.AssertExpectations(t) // Verifies that no methods (like Delete) were called on the mock
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// Use require if needed: "// Use require if needed" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/tinode/chat/server/push/common" // For error codes
+	"github.com/tinode/chat/server/store/types"
+	fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_TransientErrors_002(t *testing.T) {
+    // Arrange
+    mockDev, _, _ := setupTestEnv(t)
+    initTestLogging(t)
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {ErrorCode: common.ErrorUnavailable, ErrorMessage: "Server busy"}, // Transient
+            {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Internal issue"}, // Should not be processed
+        },
+    }
+    messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+    uids := []types.Uid{types.ParseUid("usr1"), types.ParseUid("usr2")}
+
+    // Act
+    handlePushResponse(batch, messages, uids) // Should log and return after the first transient error
+
+    // Assert
+    mockDev.AssertExpectations(t) // No store calls expected because it returns early
+    // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/stretchr/testify/mock"
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_Token_003(t *testing.T) {
+    // Arrange
+    mockDev, _, _ := setupTestEnv(t)
+    initTestLogging(t)
+    uidToDelete := types.ParseUid("usrInvTok")
+    tokenToDelete := "invalidTokenAbc"
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 1,
+        Responses: []*tnpgResponse{
+            // Error specifically mentioning message.token
+            {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid registration token format: message.token", ErrorMessage: "Bad token format"},
+        },
+    }
+    messages := []*fcmv1.Message{{Token: tokenToDelete}} // The token associated with the error
+    uids := []types.Uid{uidToDelete} // The UID associated with the error
+
+    // Expect store.Devices.Delete to be called with the correct args
+    mockDev.On("Delete", uidToDelete, tokenToDelete).Return(nil).Once()
+
+    // Act
+    handlePushResponse(batch, messages, uids)
+
+    // Assert
+    mockDev.AssertExpectations(t) // Verify Delete was called as expected
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+   mocks "github.com/tinode/chat/mocks/server/store"
+   "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_Other_004(t *testing.T) {
+    // Arrange
+    mockDev, _, _ := setupTestEnv(t)
+    initTestLogging(t)
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 1,
+        Responses: []*tnpgResponse{
+            // Error NOT mentioning message.token
+            {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid payload format in message.data", ErrorMessage: "Bad payload structure"},
+        },
+    }
+    messages := []*fcmv1.Message{{Token: "validToken"}}
+    uids := []types.Uid{types.ParseUid("usrInvOther")}
+
+    // Act
+    handlePushResponse(batch, messages, uids)
+
+    // Assert
+    // Assert that Delete was *not* called. Since no mock expectation was set, AssertExpectations will pass if it wasn't called.
+    mockDev.AssertExpectations(t)
+    // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "errors"
+  "testing"
+
+  "github.com/stretchr/testify/mock"
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_InvalidArgument_TokenDeleteError_005(t *testing.T) {
+  // Arrange
+  mockDev, _, _ := setupTestEnv(t)
+  initTestLogging(t)
+  uidToDelete := types.ParseUid("usrInvTokDelErr")
+  tokenToDelete := "invalidTokenDef"
+  dbError := errors.New("simulated DB error on delete")
+
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorInvalidArgument, ExtendedError: "Invalid token: message.token", ErrorMessage: "Bad token"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called and return an error
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(dbError).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error should be logged internally
+
+  // Assert
+  mockDev.AssertExpectations(t) // Verify Delete was called
+  // Log verification needed to confirm the dbError was logged
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+   mocks "github.com/tinode/chat/mocks/server/store"
+   "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_ConfigError_006(t *testing.T) {
+  // Arrange
+  mockDev, _, _ := setupTestEnv(t)
+  initTestLogging(t)
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 2, // Multiple errors, but should stop after first config error
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorSenderIDMismatch, ErrorMessage: "Mismatch"},
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"}, // Should not be processed
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}, {Token: "t2"}}
+  uids := []types.Uid{types.ParseUid("usrCfg1"), types.ParseUid("usrCfg2")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log config error and return
+
+  // Assert
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/stretchr/testify/mock"
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_Unregistered_007(t *testing.T) {
+  // Arrange
+  mockDev, _, _ := setupTestEnv(t)
+  initTestLogging(t)
+  uidToDelete := types.ParseUid("usrUnreg")
+  tokenToDelete := "unregisteredTokenGhi"
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired or unregistered"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(nil).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids)
+
+  // Assert
+  mockDev.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "errors"
+  "testing"
+
+  "github.com/stretchr/testify/mock"
+  "github.com/tinode/chat/server/push/common" // For error codes
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_Unregistered_DeleteError_008(t *testing.T) {
+  // Arrange
+  mockDev, _, _ := setupTestEnv(t)
+  initTestLogging(t)
+  uidToDelete := types.ParseUid("usrUnregDelErr")
+  tokenToDelete := "unregisteredTokenJkl"
+  dbError := errors.New("db error on unregistered delete")
+
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: common.ErrorUnregistered, ErrorMessage: "Token expired"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: tokenToDelete}}
+  uids := []types.Uid{uidToDelete}
+
+  // Expect store.Devices.Delete to be called and return an error
+  mockDev.On("Delete", uidToDelete, tokenToDelete).Return(dbError).Once()
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Error should be logged
+
+  // Assert
+  mockDev.AssertExpectations(t) // Verify Delete was called
+  // Log verification needed
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/push/tnpg tested by
+	github.com/tinode/chat/server/push/tnpg.test imports
+	// For error codes: "// For error codes" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/tinode/chat/server/store/types"
+  fcmv1 "google.golang.org/api/fcm/v1"
+  mocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/store"
+  // common is implicitly used in the switch cases
+  "github.com/tinode/chat/server/push/common"
+)
+
+Required Library Installation
+go get google.golang.org/api/fcm/v1
+
+Test Implementation:
+func TestHandlePushResponse_DefaultError_009(t *testing.T) {
+  // Arrange
+  mockDev, _, _ := setupTestEnv(t)
+  initTestLogging(t)
+  batch := &batchResponse{
+    SuccessCount: 0,
+    FailureCount: 1,
+    Responses: []*tnpgResponse{
+      {ErrorCode: "some-new-unexpected-error", ErrorMessage: "A novel issue occurred"},
+    },
+  }
+  messages := []*fcmv1.Message{{Token: "t1"}}
+  uids := []types.Uid{types.ParseUid("usrDefErr")}
+
+  // Act
+  handlePushResponse(batch, messages, uids) // Should log the unrecognized error
+
+  // Assert
+  mockDev.AssertExpectations(t) // No store calls expected
+  // Log verification needed
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:196:19: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:197:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  // No mocks needed
+)
+
+Test Implementation:
+func TestHandleSubResponse_Failures_Devices_011(t *testing.T) {
+    // Arrange
+    initTestLogging(t) // Ensure logs.Warn is initialized
+    uid := types.ParseUid("usrSubFailDev")
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {Index: 0, ErrorCode: "sub-dev-err-1", ErrorMessage: "Failed device 1"},
+            {Index: 1, ErrorCode: "sub-dev-err-2", ErrorMessage: "Failed device 2"},
+        },
+    }
+    req := &push.ChannelReq{Uid: uid} // Uid needed for logging
+    devices := []string{"dSubFail1", "dSubFail2"} // Devices corresponding to indices
+    channels := []string{}
+
+    // Act
+    handleSubResponse(batch, req, devices, channels) // Should log warnings for each failure
+
+    // Assert
+    // No external calls expected. Log verification needed to confirm warnings include device IDs 'dSubFail1' and 'dSubFail2'.
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:195:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+
+  "github.com/tinode/chat/server/push"
+  "github.com/tinode/chat/server/store/types"
+  // No mocks needed
+)
+
+Test Implementation:
+func TestHandleSubResponse_Failures_Channels_012(t *testing.T) {
+    // Arrange
+    initTestLogging(t) // Ensure logs.Warn is initialized
+    uid := types.ParseUid("usrSubFailChan")
+    batch := &batchResponse{
+        SuccessCount: 0,
+        FailureCount: 2,
+        Responses: []*tnpgResponse{
+            {Index: 0, ErrorCode: "sub-chan-err-3", ErrorMessage: "Failed channel A"},
+            {Index: 1, ErrorCode: "sub-chan-err-4", ErrorMessage: "Failed channel B"},
+        },
+    }
+    req := &push.ChannelReq{Uid: uid} // Uid needed for logging
+    devices := []string{}
+    channels := []string{"grpSubFailA", "grpSubFailB"} // Channels corresponding to indices
+
+    // Act
+    handleSubResponse(batch, req, devices, channels) // Should log warnings for each failure
+
+    // Assert
+    // No external calls expected. Log verification needed to confirm warnings include channel names 'grpSubFailA' and 'grpSubFailB'.
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:195:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	mocks "github.com/tinode/chat/mocks/server/store"
+)
+
+Test Implementation:
+func TestWorker_ProcessesInputChannel_258(t *testing.T) {
+  // Arrange
+  mockDev, _, config := setupTestEnv(t) // Setup mocks and initialize handler with worker
+  postCalled := make(chan bool, 1)      // Use channel for synchronization
+  initTestLogging(t)
+
+  // Mock HTTP Server for postMessage called by sendPushes
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+      assert.Equal(t, "/pushv1/"+config.OrgID, r.URL.Path)
+      w.Header().Set("Content-Type", "application/json")
+      w.WriteHeader(http.StatusOK)
+      // Send valid gzipped response
+      respBody := &batchResponse{SuccessCount: 1}
+      buf := new(bytes.Buffer)
+      gzw := gzip.NewWriter(buf)
+      err := json.NewEncoder(gzw).Encode(respBody)
+      require.NoError(t, err)
+      gzw.Close()
+      w.Header().Set("Content-Encoding", "gzip")
+      _, err = w.Write(buf.Bytes())
+      require.NoError(t, err)
+      postCalled <- true // Signal that post was called
+  }))
+  defer server.Close()
+
+  // Ensure handler uses the test server URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += pushPath + "/" + config.OrgID
+  handler.pushUrl = serverUrl.String() // Update the initialized handler
+
+  rcpt := &push.Receipt{
+      To: map[types.Uid]push.Recipient{
+          types.ParseUid("usrWorker"): {Devices: []string{"dWorker"}, Unread: 1},
+      },
+      Payload: push.Payload{Topic: "grpWorker", SeqId: 1, From:"usrFrom"},
+  }
+
+  // Act: Send a receipt to the input channel
+  handler.input <- rcpt
+
+  // Assert: Wait for the worker goroutine to process the message and signal
+  select {
+  case called := <-postCalled:
+      assert.True(t, called, "postMessage should have been called by the worker")
+  case <-time.After(200 * time.Millisecond): // Increased timeout
+      t.Fatal("Timed out waiting for postMessage call")
+  }
+  mockDev.AssertExpectations(t) // Ensure no unexpected store calls
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:198:24: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:200:2: undefined: initTestLogging
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+  "github.com/stretchr/testify/mock"
+	"github.com/tinode/chat/server/push"
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	mocks "github.com/tinode/chat/mocks/server/store"
+)
+
+Test Implementation:
+func TestWorker_ProcessesChannelReq_369(t *testing.T) {
+  // Arrange
+  _, mockSub, config := setupTestEnv(t) // Setup mocks and initialize handler with worker
+  postCalled := make(chan bool, 1)      // Use channel for synchronization
+  initTestLogging(t)
+  uid := types.ParseUid("usrChanWorker")
+  devID := "dChanWorker"
+  returnedSubs := []types.Subscription{
+      {Topic: "grpChan1", ModeGiven: types.ModePres | types.ModeRead},
+      {Topic: "grpChan2", ModeGiven: types.ModePres | types.ModeWrite},
+      {Topic: "grpChan3", ModeGiven: types.ModeRead}, // No P access
+  }
+  expectedChannels := []string{"grpChan1", "grpChan2"}
+
+
+  // Mock store for fcm.ChannelsForUser dependency
+  mockSub.On("GetUserSubs", uid, (*types.QueryOpt)(nil)).Return(returnedSubs, nil).Once()
+
+  // Mock HTTP Server for postMessage called by processSubscription
+  server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+      assert.Equal(t, "/sub/"+config.OrgID, r.URL.Path)
+       // Verify request body
+      gzr, err := gzip.NewReader(r.Body)
+      require.NoError(t, err)
+      defer gzr.Close()
+      bodyBytes, err := io.ReadAll(gzr)
+      require.NoError(t, err)
+      var reqBody subUnsubReq
+      err = json.Unmarshal(bodyBytes, &reqBody)
+      require.NoError(t, err)
+      assert.Equal(t, devID, reqBody.Device)
+      assert.ElementsMatch(t, expectedChannels, reqBody.Channels)
+      assert.False(t, reqBody.Unsub)
+
+      w.Header().Set("Content-Encoding", "gzip")
+      w.Header().Set("Content-Type", "application/json")
+      w.WriteHeader(http.StatusOK)
+      // Send valid gzipped response
+      respBody := &batchResponse{SuccessCount: len(expectedChannels)}
+      buf := new(bytes.Buffer)
+      gzw := gzip.NewWriter(buf)
+      err = json.NewEncoder(gzw).Encode(respBody)
+      require.NoError(t, err)
+      gzw.Close()
+      _, err = w.Write(buf.Bytes())
+      require.NoError(t, err)
+      postCalled <- true // Signal that post was called
+  }))
+  defer server.Close()
+
+  // Ensure handler uses the test server URL
+  var err error
+  serverUrl, err := url.Parse(server.URL)
+  require.NoError(t, err)
+  serverUrl.Path += subsPath + "/" + config.OrgID
+  handler.subUrl = serverUrl.String() // Update the initialized handler
+
+  req := &push.ChannelReq{
+      Uid:      uid,
+      DeviceID: devID, // Subscribe this device to all channels with P access
+      Unsub:    false,
+  }
+
+  // Act: Send a channel request to the channel
+  handler.channel <- req
+
+  // Assert: Wait for the worker goroutine to process the message and signal
+  select {
+  case called := <-postCalled:
+      assert.True(t, called, "postMessage should have been called by the worker for channel req")
+  case <-time.After(200 * time.Millisecond): // Increased timeout
+      t.Fatal("Timed out waiting for postMessage call")
+  }
+  mockSub.AssertExpectations(t) // Verify store call
+}
+
+
+Error Message:
+server/push/tnpg/push_tnpg_test.go:199:24: undefined: setupTestEnv
+server/push/tnpg/push_tnpg_test.go:201:2: undefined: initTestLogging
+-------------------------------------------------
+

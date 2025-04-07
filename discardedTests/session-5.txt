@@ -1,0 +1,4546 @@
+Iteration-2
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestFeatureMarshalText_ValidAndInvalidFeatures_111(t *testing.T) {
+    tests := []struct {
+        feature  Feature
+        expected []byte
+        err      error
+    }{
+        {FeatureValidated, []byte("V"), nil},
+        {FeatureNoLogin, []byte("L"), nil},
+        {FeatureValidated | FeatureNoLogin, []byte("VL"), nil},
+        {Feature(999), nil, nil}, // Invalid feature
+    }
+
+    for _, tt := range tests {
+        t.Run(string(tt.expected), func(t *testing.T) {
+            result, err := tt.feature.MarshalText()
+            if tt.err != nil {
+                assert.Error(t, err)
+                assert.Equal(t, tt.err.Error(), err.Error())
+            } else {
+                assert.NoError(t, err)
+                assert.Equal(t, tt.expected, result)
+            }
+        })
+    }
+}
+
+
+Error Message:
+FAIL
+coverage: 49.3% of statements
+FAIL	github.com/tinode/chat/server/auth	0.372s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+  "errors"
+  "time"
+)
+
+Test Implementation:
+func TestDurationUnmarshalJSON_ValidAndInvalidInputs_333(t *testing.T) {
+    tests := []struct {
+        input    []byte
+        expected Duration
+        err      error
+    }{
+        {[]byte(`5000`), Duration(5000 * time.Second), nil},
+        {[]byte(`"5000s"`), Duration(5000 * time.Second), nil},
+        {[]byte(`"invalid"`), Duration(0), errors.New("invalid duration")},
+        {[]byte(`{}`), Duration(0), errors.New("invalid duration")},
+    }
+
+    for _, tt := range tests {
+        t.Run(string(tt.input), func(t *testing.T) {
+            var duration Duration
+            err := duration.UnmarshalJSON(tt.input)
+            if tt.err != nil {
+                assert.Error(t, err)
+                assert.Equal(t, tt.err.Error(), err.Error())
+            } else {
+                assert.NoError(t, err)
+                assert.Equal(t, tt.expected, duration)
+            }
+        })
+    }
+}
+
+
+Error Message:
+FAIL
+coverage: 74.0% of statements
+FAIL	github.com/tinode/chat/server/auth	0.312s
+FAIL
+-------------------------------------------------
+
+Iteration-1
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_UnmarshalText_987(t *testing.T) {
+    // Arrange
+    var uid Uid
+    data := []byte("MTIzNDU=")
+
+    // Act
+    err := uid.UnmarshalText(data)
+
+    // Assert
+    assert.NoError(t, err)
+    assert.Equal(t, Uid(12345), uid)
+}
+
+
+Error Message:
+FAIL
+coverage: 3.8% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.315s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_MarshalText_654(t *testing.T) {
+    // Arrange
+    uid := Uid(12345)
+
+    // Act
+    result, err := uid.MarshalText()
+
+    // Assert
+    assert.NoError(t, err)
+    assert.Equal(t, []byte("MTIzNDU="), result)
+}
+
+
+Error Message:
+FAIL
+coverage: 4.8% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.289s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_String_321(t *testing.T) {
+    // Arrange
+    uid := Uid(12345)
+
+    // Act
+    result := uid.String()
+
+    // Assert
+    assert.Equal(t, "MTIzNDU=", result)
+}
+
+
+Error Message:
+FAIL
+coverage: 5.2% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.321s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_String32_654(t *testing.T) {
+    // Arrange
+    uid := Uid(12345)
+
+    // Act
+    result := uid.String32()
+
+    // Assert
+    assert.Equal(t, "gezdg", result)
+}
+
+
+Error Message:
+FAIL
+coverage: 3.8% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.686s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestParseUid_987(t *testing.T) {
+    // Arrange
+    data := "MTIzNDU="
+
+    // Act
+    result := ParseUid(data)
+
+    // Assert
+    assert.Equal(t, Uid(12345), result)
+}
+
+
+Error Message:
+FAIL
+coverage: 4.5% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.296s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestParseUid32_654(t *testing.T) {
+    // Arrange
+    data := "gezdg"
+
+    // Act
+    result := ParseUid32(data)
+
+    // Assert
+    assert.Equal(t, Uid(12345), result)
+}
+
+
+Error Message:
+FAIL
+coverage: 4.0% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.305s
+FAIL
+-------------------------------------------------
+
+Iteration-2
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "time"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/stretchr/testify/mock"
+  storeMocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/auth"
+  "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestAddRecord_ValidRecord_001(t *testing.T) {
+    // Arrange
+    mockStoreUsers := new(storeMocks.Users)
+    store.Users = mockStoreUsers
+
+    rec := &auth.Rec{
+        Uid:       types.Uid(12345),
+        AuthLevel: auth.LevelNone,
+        Lifetime:  auth.Duration(time.Hour),
+        Tags:      []string{},
+    }
+    secret := []byte("username:password")
+    remoteAddr := "127.0.0.1"
+
+    mockStoreUsers.On("AddAuthRecord", rec.Uid, auth.LevelAuth, "test_authenticator", "username", mock.Anything, mock.Anything).Return(nil)
+
+    a := &authenticator{
+        name:             "test_authenticator",
+        addToTags:        true,
+        minPasswordLength: 3,
+        minLoginLength:    2,
+    }
+
+    // Act
+    result, err := a.AddRecord(rec, secret, remoteAddr)
+
+    // Assert
+    require.NoError(t, err)
+    assert.Equal(t, rec, result)
+    assert.Contains(t, rec.Tags, "test_authenticator:username")
+    mockStoreUsers.AssertExpectations(t)
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:130:35: undefined: storeMocks.Users
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "time"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/stretchr/testify/mock"
+  storeMocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/auth"
+  "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestUpdateRecord_ValidRecord_003(t *testing.T) {
+    // Arrange
+    mockStoreUsers := new(storeMocks.Users)
+    store.Users = mockStoreUsers
+
+    rec := &auth.Rec{
+        Uid:       types.Uid(12345),
+        AuthLevel: auth.LevelNone,
+        Lifetime:  auth.Duration(time.Hour),
+        Tags:      []string{"test_authenticator:old_username"},
+    }
+    secret := []byte("new_username:new_password")
+    remoteAddr := "127.0.0.1"
+
+    mockStoreUsers.On("GetAuthRecord", rec.Uid, "test_authenticator").Return("old_username", auth.LevelAuth, nil, nil, nil)
+    mockStoreUsers.On("GetAuthUniqueRecord", "test_authenticator", "new_username").Return(types.ZeroUid, nil, nil, nil, nil)
+    mockStoreUsers.On("UpdateAuthRecord", rec.Uid, auth.LevelAuth, "test_authenticator", "new_username", mock.Anything, mock.Anything).Return(nil)
+
+    a := &authenticator{
+        name:             "test_authenticator",
+        addToTags:        true,
+        minPasswordLength: 3,
+        minLoginLength:    2,
+    }
+
+    // Act
+    result, err := a.UpdateRecord(rec, secret, remoteAddr)
+
+    // Assert
+    require.NoError(t, err)
+    assert.Equal(t, rec, result)
+    assert.Contains(t, rec.Tags, "test_authenticator:new_username")
+    assert.NotContains(t, rec.Tags, "test_authenticator:old_username")
+    mockStoreUsers.AssertExpectations(t)
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:150:35: undefined: storeMocks.Users
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "time"
+  "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/require"
+  "github.com/stretchr/testify/mock"
+  "golang.org/x/crypto/bcrypt"
+  storeMocks "github.com/tinode/chat/mocks/server/store"
+  "github.com/tinode/chat/server/auth"
+  "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestAuthenticate_ValidLoginPassword_004(t *testing.T) {
+    // Arrange
+    mockStoreUsers := new(storeMocks.Users)
+    store.Users = mockStoreUsers
+
+    secret := []byte("username:password")
+    remoteAddr := "127.0.0.1"
+    uid := types.Uid(12345)
+    authLvl := auth.LevelAuth
+    passhash, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+    expires := time.Now().Add(time.Hour)
+
+    mockStoreUsers.On("GetAuthUniqueRecord", "test_authenticator", "username").Return(uid, authLvl, passhash, expires, nil)
+
+    a := &authenticator{
+        name: "test_authenticator",
+    }
+
+    // Act
+    result, _, err := a.Authenticate(secret, remoteAddr)
+
+    // Assert
+    require.NoError(t, err)
+    assert.NotNil(t, result)
+    assert.Equal(t, uid, result.Uid)
+    assert.Equal(t, authLvl, result.AuthLevel)
+    mockStoreUsers.AssertExpectations(t)
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:150:35: undefined: storeMocks.Users
+-------------------------------------------------
+
+Iteration-3
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestFeatureUnmarshalJSON_ValidAndInvalidInputs_777(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected Feature
+		wantErr  bool
+		errStr   string // Expected error substring if wantErr is true
+	}{
+		{"QuotedEmpty", []byte(`""`), Feature(0), false, ""},
+		{"QuotedV", []byte(`"V"`), FeatureValidated, false, ""},
+		{"QuotedL", []byte(`"L"`), FeatureNoLogin, false, ""},
+		{"QuotedVL", []byte(`"VL"`), FeatureValidated | FeatureNoLogin, false, ""},
+		{"QuotedInvalid", []byte(`"X"`), Feature(0), true, "Feature: invalid character 'X'"},
+		{"NonQuotedNumeric1", []byte(`1`), FeatureValidated, false, ""},
+		{"NonQuotedNumeric2", []byte(`2`), FeatureNoLogin, false, ""},
+		{"NonQuotedNumeric3", []byte(`3`), FeatureValidated | FeatureNoLogin, false, ""},
+		{"NonQuotedStringV", []byte(`V`), FeatureValidated, false, ""}, // Technically invalid JSON, but UnmarshalText handles it
+		{"NonQuotedStringL", []byte(`L`), FeatureNoLogin, false, ""},   // Technically invalid JSON, but UnmarshalText handles it
+		{"NonQuotedStringVL", []byte(`VL`), FeatureValidated | FeatureNoLogin, false, ""}, // Technically invalid JSON, but UnmarshalText handles it
+		{"NonQuotedInvalidChar", []byte(`X`), Feature(0), true, "Feature: invalid character 'X'"},
+		{"MalformedJSON", []byte(`"V`), Feature(0), true, "unexpected end of JSON input"}, // This case might be caught by json.Unmarshal before our func
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var feature Feature
+			// Use stdlib json.Unmarshal to simulate real-world usage which calls our UnmarshalJSON
+			err := json.Unmarshal(tt.input, &feature)
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errStr != "" {
+					assert.Contains(t, err.Error(), tt.errStr)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+			// Check the resulting feature value regardless of error
+			assert.Equal(t, tt.expected, feature)
+		})
+	}
+}
+
+
+Error Message:
+FAIL
+coverage: 80.8% of statements
+FAIL	github.com/tinode/chat/server/auth	0.441s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "time"
+  "encoding/json"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestDurationUnmarshalJSON_ValidAndInvalidInputs_333(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected Duration
+		wantErr  bool
+		errStr   string // Expected error substring
+	}{
+		{"NumericSeconds", []byte(`5000`), Duration(5000 * time.Second), false, ""},
+		{"NumericFloatSeconds", []byte(`5000.5`), Duration(5000 * time.Second), false, ""}, // Float will be truncated to int by time.Duration
+		{"StringDuration", []byte(`"5000s"`), Duration(5000 * time.Second), false, ""},
+		{"StringDurationWithMS", []byte(`"1m30s"`), Duration(90 * time.Second), false, ""},
+		{"InvalidStringDuration", []byte(`"invalid"`), Duration(0), true, "time: invalid duration"},
+		{"InvalidJSONTypeObject", []byte(`{}`), Duration(0), true, "invalid duration"}, // Hits the default case
+		{"InvalidJSONTypeArray", []byte(`[]`), Duration(0), true, "invalid duration"}, // Hits the default case
+		{"InvalidJSONSyntax", []byte(`[}`), Duration(0), true, "invalid character"}, // json.Unmarshal error
+		{"NullJSON", []byte(`null`), Duration(0), true, "json: cannot unmarshal null"}, // json.Unmarshal error
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var duration Duration
+			err := json.Unmarshal(tt.input, &duration) // Use json.Unmarshal to trigger the custom method
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errStr != "" {
+					assert.Contains(t, err.Error(), tt.errStr)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, duration)
+			}
+		})
+	}
+}
+
+
+Error Message:
+FAIL
+coverage: 91.8% of statements
+FAIL	github.com/tinode/chat/server/auth	0.510s
+FAIL
+-------------------------------------------------
+
+Iteration-2
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+  "testing"
+  "encoding/base64"
+  "github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_UnmarshalText_987(t *testing.T) {
+    // Arrange
+    var uid Uid
+    validData := []byte("AAAAAAAAAAA")
+    invalidData := []byte("invalid_base64")
+
+    // Act & Assert for valid data
+    err := uid.UnmarshalText(validData)
+    assert.NoError(t, err)
+    assert.Equal(t, Uid(0), uid)
+
+    // Act & Assert for invalid data
+    err = uid.UnmarshalText(invalidData)
+    assert.Error(t, err)
+    assert.Contains(t, err.Error(), "Uid.UnmarshalText: failed to decode")
+}
+
+
+Error Message:
+FAIL
+coverage: 5.0% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.374s
+FAIL
+-------------------------------------------------
+
+Iteration-3
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"github.com/stretchr/testify/assert"
+)
+
+Test Implementation:
+func TestUid_UnmarshalJSON_MissingQuotes_111(t *testing.T) {
+    // Arrange
+    var uid Uid
+    missingQuotesJson := []byte(`AAAAAAAAAAA`) // Correct length but no quotes
+
+    // Act
+    err := uid.UnmarshalJSON(missingQuotesJson)
+
+    // Assert
+    assert.Error(t, err)
+    assert.Contains(t, err.Error(), "Uid.UnmarshalJSON: unrecognized")
+    assert.Equal(t, Uid(0), uid)
+}
+
+
+Error Message:
+FAIL
+coverage: 11.8% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.519s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Test Implementation:
+
+
+Error Message:
+server/store/types/types_test.go:238:1: expected declaration, found '}'
+-------------------------------------------------
+
+Iteration-5
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"errors"
+	"strconv" // Needed to trigger strconv error in one test case
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestFeatureUnmarshalJSON_NumericString_444(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected Feature
+		err      error
+	}{
+		{"Numeric1", []byte(`1`), FeatureValidated, nil},
+		{"Numeric2", []byte(`2`), FeatureNoLogin, nil},
+		{"Numeric3", []byte(`3`), FeatureValidated | FeatureNoLogin, nil},
+		{"Numeric0", []byte(`0`), Feature(0), nil},
+		{"NumericInvalid", []byte(`"1a"`), Feature(0), errors.New("strconv.Atoi: parsing \"1a\": invalid syntax")}, // This actually gets handled by UnmarshalText logic
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var feature Feature
+			err := feature.UnmarshalJSON(tt.input) // Passes raw bytes to UnmarshalText
+			if tt.err != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.err.Error()) // Use Contains for strconv errors
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expected, feature)
+		})
+	}
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/auth tested by
+	github.com/tinode/chat/server/auth.test imports
+	// Needed to trigger strconv error in one test case: "// Needed to trigger strconv error in one test case" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestDurationUnmarshalJSON_VariousInputs_777(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected Duration
+		err      error
+	}{
+		{"NumericSeconds", []byte(`3600`), Duration(1 * time.Hour), nil},
+		{"NumericFloatSeconds", []byte(`1.5`), Duration(1500 * time.Millisecond), nil}, // 1.5 seconds
+		{"StringDurationSeconds", []byte(`"5s"`), Duration(5 * time.Second), nil},
+		{"StringDurationMinutes", []byte(`"2m"`), Duration(2 * time.Minute), nil},
+		{"StringDurationCombined", []byte(`"1h30m"`), Duration(90 * time.Minute), nil},
+		{"InvalidStringDuration", []byte(`"abc"`), Duration(0), errors.New("time: invalid duration \"abc\"")},
+		{"InvalidTypeBoolean", []byte(`true`), Duration(0), errors.New("invalid duration")},
+		{"InvalidTypeNull", []byte(`null`), Duration(0), errors.New("invalid duration")}, // json.Unmarshal maps null to nil interface{}
+		{"InvalidTypeObject", []byte(`{}`), Duration(0), errors.New("invalid duration")},
+		{"InvalidTypeArray", []byte(`[]`), Duration(0), errors.New("invalid duration")},
+		{"MalformedJson", []byte(`{"key":`), Duration(0), errors.New("unexpected end of JSON input")}, // Error from json.Unmarshal itself
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var d Duration
+			err := d.UnmarshalJSON(tt.input)
+			if tt.err != nil {
+				assert.Error(t, err)
+				// Use Contains because underlying json/time errors might have prefixes
+				assert.Contains(t, err.Error(), tt.err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.expected, d)
+		})
+	}
+}
+
+
+Error Message:
+FAIL
+coverage: 95.9% of statements
+FAIL	github.com/tinode/chat/server/auth	1.042s
+FAIL
+-------------------------------------------------
+
+Iteration-4
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestUid_UnmarshalText_ShortDecode_502(t *testing.T) {
+	// Arrange
+	var uid Uid
+	// Craft a valid base64 string which decodes to less than 8 bytes.
+	// Example: "YWJj" decodes to "abc" (3 bytes)
+	shortDecodedText := []byte("YWJjYWJjYWJ") // 11 bytes, decodes to < 8 bytes
+	require.Len(t, shortDecodedText, uidBase64Unpadded)
+
+	// Act
+	err := uid.UnmarshalText(shortDecodedText)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, "Uid.UnmarshalText: failed to decode", err.Error())
+	assert.Equal(t, Uid(0), uid) // Should remain zero
+}
+
+
+Error Message:
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+	panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x18 pc=0x100cee6e4]
+
+goroutine 22 [running]:
+testing.tRunner.func1.2({0x100d874e0, 0x100f2e740})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x100d874e0?, 0x100f2e740?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+github.com/tinode/chat/server/store/types.TestUid_UnmarshalText_ShortDecode_502(0x140000ce680)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3272898848/server/store/types/types_test.go:251 +0xd4
+testing.tRunner(0x140000ce680, 0x100dc3720)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server/store/types	1.137s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestParseUid32_ValidNonZeroAndError_508(t *testing.T) {
+	// Arrange: Valid case
+	expectedUid := Uid(6666666666666666666)
+	uidString32 := expectedUid.String32()
+
+	// Act: Valid case
+	result := ParseUid32(uidString32)
+
+	// Assert: Valid case
+	assert.Equal(t, expectedUid, result)
+
+	// Arrange: Decode error case (invalid base32 character '1')
+	invalidString32 := "a1aaaaaaaaaaa"
+
+	// Act: Decode error case
+	result = ParseUid32(invalidString32)
+
+	// Assert: Decode error case
+	// ParseUid32 currently silently fails on decode error, returning ZeroUid
+	assert.Equal(t, ZeroUid, result)
+}
+
+
+Error Message:
+FAIL
+coverage: 12.0% of statements
+FAIL	github.com/tinode/chat/server/store/types	0.219s
+FAIL
+-------------------------------------------------
+
+Iteration-1
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestUnsubAll_Success_005(t *testing.T) {
+    doneChan := make(chan *ClientComMessage, 1)
+    session := &Session{
+        subs: map[string]*Subscription{
+            "topic1": {done: doneChan},
+            "topic2": {done: doneChan},
+        },
+    }
+
+    session.unsubAll()
+
+    for i := 0; i < 2; i++ {
+        select {
+        case msg := <-doneChan:
+            if msg.sess != session {
+                t.Errorf("Expected session in unsub message to be the current session, but got a different session.")
+            }
+        default:
+            t.Errorf("Expected unsub message for topic %d, but none was sent.", i+1)
+        }
+    }
+}
+
+
+Error Message:
+FAIL	github.com/tinode/chat/server	22.419s
+-------------------------------------------------
+
+Iteration-4
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"errors"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Test Implementation:
+func TestInit_Variations_512(t *testing.T) {
+    // Test invalid JSON
+    t.Run("InvalidJSON", func(t *testing.T) {
+        a := &authenticator{}
+        invalidJSON := json.RawMessage(`{invalid}`)
+        err := a.Init(invalidJSON, "test_invalid_json")
+        require.Error(t, err)
+        assert.Contains(t, err.Error(), "auth_basic: failed to parse config")
+        assert.False(t, a.IsInitialized())
+    })
+
+    // Test default password length
+    t.Run("DefaultPasswordLength", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_login_length": 2}`)
+        err := a.Init(configJSON, "test_default_pass")
+        require.NoError(t, err)
+        assert.Equal(t, defaultMinPasswordLength, a.minPasswordLength)
+        assert.True(t, a.IsInitialized())
+    })
+
+    // Test default login length
+    t.Run("DefaultLoginLength", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_password_length": 5}`)
+        err := a.Init(configJSON, "test_default_login")
+        require.NoError(t, err)
+        assert.Equal(t, defaultMinLoginLength, a.minLoginLength)
+        assert.True(t, a.IsInitialized())
+    })
+
+    // Test login length exceeding limit
+    t.Run("LoginLengthExceedsLimit", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_login_length": 100}`)
+        err := a.Init(configJSON, "test_login_limit")
+        require.Error(t, err)
+        assert.Equal(t, "auth_basic: min_login_length exceeds the limit", err.Error())
+        assert.False(t, a.IsInitialized())
+    })
+
+    // Test re-initialization
+    t.Run("Reinitialization", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{}`)
+        err := a.Init(configJSON, "first_init")
+        require.NoError(t, err)
+        assert.True(t, a.IsInitialized())
+
+        err = a.Init(configJSON, "second_init")
+        require.Error(t, err)
+        assert.Equal(t, "auth_basic: already initialized as first_init; second_init", err.Error())
+    })
+}
+
+
+Error Message:
+FAIL
+coverage: 27.5% of statements
+FAIL	github.com/tinode/chat/server/auth/basic	0.326s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"errors"
+	"time"
+	"strings"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Test Implementation:
+func TestAddRecord_Variations_721(t *testing.T) {
+    authName := "test_basic"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minPasswordLength: 5,
+        minLoginLength:    3,
+    }
+    testUID := types.ParseUid("usrTesting123")
+    testUser := "testuser"
+    testPass := "password123"
+    secret := []byte(testUser + ":" + testPass)
+    remoteAddr := "192.168.1.1"
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb // Replace global store with mock
+    t.Cleanup(func() {
+        store.Users = nil // Restore original (or nil)
+    })
+
+    // Test Login Policy Failure
+    t.Run("LoginPolicyFail", func(t *testing.T) {
+        rec := &auth.Rec{Uid: testUID}
+        shortUserSecret := []byte("u:" + testPass) // Login too short
+        res, err := a.AddRecord(rec, shortUserSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+    })
+
+    // Test Password Policy Failure
+    t.Run("PasswordPolicyFail", func(t *testing.T) {
+        rec := &auth.Rec{Uid: testUID}
+        shortPassSecret := []byte(testUser + ":123") // Password too short
+        res, err := a.AddRecord(rec, shortPassSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+    })
+
+    // Test DB AddAuthRecord Failure
+    t.Run("DBAddFail", func(t *testing.T) {
+        rec := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Hour)}
+        dbErr := errors.New("db add failed")
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).Return(dbErr).Once()
+
+        res, err := a.AddRecord(rec, secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success with Lifetime and LevelNone
+    t.Run("SuccessLifetimeLevelNone", func(t *testing.T) {
+        rec := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Minute * 30), AuthLevel: auth.LevelNone}
+        expectedExpires := time.Now().Add(time.Minute * 30).UTC().Round(time.Millisecond)
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).
+            Run(func(args mock.Arguments) {
+                // Check expiration time with tolerance
+                actualExpires := args.Get(5).(time.Time)
+                assert.WithinDuration(t, expectedExpires, actualExpires, time.Second)
+            }).Return(nil).Once()
+
+        res, err := a.AddRecord(rec, secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.Equal(t, auth.LevelAuth, res.AuthLevel) // Should be upgraded from LevelNone
+        assert.Contains(t, res.Tags, authName+":"+testUser) // Tag added
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success with Default AuthLevel and no Tags
+    t.Run("SuccessDefaultLevelNoTags", func(t *testing.T) {
+        aNoTags := &authenticator{
+            name:              authName,
+            addToTags:         false, // Tags explicitly disabled
+            minPasswordLength: 5,
+            minLoginLength:    3,
+        }
+        rec := &auth.Rec{Uid: testUID, AuthLevel: auth.LevelAuth} // Default level provided
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(nil).Once()
+
+        res, err := aNoTags.AddRecord(rec, secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.Equal(t, auth.LevelAuth, res.AuthLevel)
+        assert.Empty(t, res.Tags) // Tag not added
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test bcrypt failure (mocking bcrypt is hard, this is conceptual)
+    // In a real scenario, you might inject a mockable hasher
+    // t.Run("BcryptFail", func(t *testing.T) { ... })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:163:31: undefined: mock_store.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"errors"
+	"time"
+	"strings"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Test Implementation:
+func TestUpdateRecord_Variations_834(t *testing.T) {
+    authName := "test_basic_upd"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minPasswordLength: 6,
+        minLoginLength:    4,
+    }
+    testUID := types.ParseUid("usrUpdate123")
+    oldUser := "olduser"
+    newUser := "newuser123"
+    oldPass := "oldpassword"
+    newPass := "newpassword123"
+    oldSecret := []byte(oldUser + ":" + oldPass) // Not used directly for update, only for context
+    _ = oldSecret // Avoid unused variable error if needed later
+    updateSecretPassOnly := []byte(":" + newPass) // Update password only
+    updateSecretUserPass := []byte(newUser + ":" + newPass)
+    updateSecretInvalidPass := []byte(newUser + ":123") // Invalid new password
+    updateSecretInvalidUser := []byte("nu:" + newPass)  // Invalid new user
+    remoteAddr := "192.168.1.2"
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb // Replace global store with mock
+    t.Cleanup(func() {
+        store.Users = nil // Restore original (or nil)
+    })
+
+    rec := &auth.Rec{Uid: testUID, Tags: []string{authName + ":" + oldUser}}
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+        invalidSecret := []byte("invalidformat")
+        res, err := a.UpdateRecord(rec, invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.Nil(t, res)
+    })
+
+    // Test GetAuthRecord DB Failure
+    t.Run("GetAuthRecordFail", func(t *testing.T) {
+        dbErr := errors.New("get auth failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (GetAuthRecord returns empty login)
+    t.Run("UserNotFound", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelAuth, nil, time.Time{}, nil).Once()
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrNotFound)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Password Only - Success
+    t.Run("SuccessUpdatePasswordOnly", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, oldUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(nil).Once()
+
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        // Tags remain unchanged as username didn't change
+        assert.Contains(t, res.Tags, authName+":"+oldUser)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Check Login Policy Fail
+    t.Run("UpdateUserLoginPolicyFail", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        res, err := a.UpdateRecord(rec, updateSecretInvalidUser, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Check Uniqueness DB Fail
+    t.Run("UpdateUserCheckUniqueFail", func(t *testing.T) {
+        dbErr := errors.New("check unique failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - New Username Duplicate
+    t.Run("UpdateUserDuplicate", func(t *testing.T) {
+        duplicateUID := types.ParseUid("usrExisting99")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(duplicateUID, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrDuplicate)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Check Password Policy Fail
+    t.Run("UpdateUserPasswordPolicyFail", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // Mock successful unique check for the new username
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        res, err := a.UpdateRecord(rec, updateSecretInvalidPass, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - DB UpdateAuthRecord Failure
+    t.Run("UpdateUserDBUpdateFail", func(t *testing.T) {
+        dbErr := errors.New("db update failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, newUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(dbErr).Once()
+
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Success with Lifetime
+    t.Run("SuccessUpdateUserPassLifetime", func(t *testing.T) {
+        recWithLifetime := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Hour), Tags: []string{authName + ":" + oldUser}}
+        expectedExpires := types.TimeNow().Add(time.Hour)
+
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, newUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).
+            Run(func(args mock.Arguments) {
+                actualExpires := args.Get(5).(time.Time)
+                assert.WithinDuration(t, expectedExpires, actualExpires, time.Second)
+            }).Return(nil).Once()
+
+        res, err := a.UpdateRecord(recWithLifetime, updateSecretUserPass, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.NotContains(t, res.Tags, authName+":"+oldUser) // Old tag removed
+        assert.Contains(t, res.Tags, authName+":"+newUser)   // New tag added
+        mockUserDb.AssertExpectations(t)
+    })
+
+     // Test bcrypt failure (conceptual)
+    // t.Run("BcryptFail", func(t *testing.T) { ... })
+
+    // Test internal error on bcrypt failure (line 188)
+    // This path is hard to test reliably without injecting a mock hasher.
+    // Assume bcrypt.GenerateFromPassword fails
+    // t.Run("UpdateBcryptInternalError", func(t *testing.T) { ... })
+
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:170:31: undefined: mock_store.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"errors"
+	"time"
+	"strings"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Test Implementation:
+func TestAuthenticate_Variations_945(t *testing.T) {
+    authName := "test_basic_auth"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minPasswordLength: 5,
+        minLoginLength:    3,
+    }
+    testUser := "authuser"
+    testPass := "authpass123"
+    testUID := types.ParseUid("usrAuth567")
+    secret := []byte(testUser + ":" + testPass)
+    hashedPass, _ := bcrypt.GenerateFromPassword([]byte(testPass), bcrypt.DefaultCost)
+    remoteAddr := "10.0.0.1"
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = nil
+    })
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+        invalidSecret := []byte("badsecret")
+        rec, payload, err := a.Authenticate(invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+    })
+
+    // Test GetAuthUniqueRecord DB Failure
+    t.Run("DBGetFail", func(t *testing.T) {
+        dbErr := errors.New("db get failed")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (UID is Zero)
+    t.Run("UserNotFound", func(t *testing.T) {
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrFailed) // Returns ErrFailed for non-existent user
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Expired Record
+    t.Run("RecordExpired", func(t *testing.T) {
+        expiredTime := time.Now().Add(-time.Hour)
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, expiredTime, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrExpired)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Invalid Password (bcrypt compare fails)
+    t.Run("InvalidPassword", func(t *testing.T) {
+        wrongSecret := []byte(testUser + ":wrongpass")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, time.Time{}, nil).Once() // No expiry
+        rec, payload, err := a.Authenticate(wrongSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrFailed)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success - No Expiry
+    t.Run("SuccessNoExpiry", func(t *testing.T) {
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, time.Time{}, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, rec)
+        assert.Nil(t, payload)
+        assert.Equal(t, testUID, rec.Uid)
+        assert.Equal(t, auth.LevelAuth, rec.AuthLevel)
+        assert.Equal(t, auth.Duration(0), rec.Lifetime) // No expiry means 0 lifetime
+        assert.Equal(t, types.StateUndefined, rec.State)
+        assert.Equal(t, auth.Feature(0), rec.Features)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success - With Expiry
+    t.Run("SuccessWithExpiry", func(t *testing.T) {
+        expiresAt := time.Now().Add(time.Hour * 24)
+        expectedLifetime := time.Until(expiresAt)
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAdmin, hashedPass, expiresAt, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, rec)
+        assert.Nil(t, payload)
+        assert.Equal(t, testUID, rec.Uid)
+        assert.Equal(t, auth.LevelAdmin, rec.AuthLevel)
+        // Check lifetime with tolerance
+        assert.InDelta(t, expectedLifetime, time.Duration(rec.Lifetime), float64(time.Second))
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:164:31: undefined: mock_store.UserDb
+server/auth/basic/auth_basic_test.go:241:81: undefined: auth.LevelAdmin
+server/auth/basic/auth_basic_test.go:247:24: undefined: auth.LevelAdmin
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"testing"
+	"errors"
+	"time"
+	"strings"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Test Implementation:
+func TestIsUnique_Variations_267(t *testing.T) {
+    authName := "unique_test"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minLoginLength:    4,
+        minPasswordLength: 6,
+    }
+    testUser := "uniqueuser"
+    testPass := "uniquepass"
+    secret := []byte(testUser + ":" + testPass)
+    remoteAddr := "127.0.0.1"
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = nil
+    })
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+        invalidSecret := []byte("badsecret")
+        unique, err := a.IsUnique(invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.False(t, unique)
+    })
+
+    // Test Login Policy Failure
+    t.Run("LoginPolicyFail", func(t *testing.T) {
+        shortUserSecret := []byte("usr:" + testPass) // Too short
+        unique, err := a.IsUnique(shortUserSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.False(t, unique)
+    })
+
+    // Test GetAuthUniqueRecord DB Failure
+    t.Run("DBGetFail", func(t *testing.T) {
+        dbErr := errors.New("db get unique failed")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Username is Unique
+    t.Run("Unique", func(t *testing.T) {
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        require.NoError(t, err)
+        assert.True(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Username is Duplicate
+    t.Run("Duplicate", func(t *testing.T) {
+        existingUID := types.ParseUid("usrExists11")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(existingUID, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrDuplicate)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:200:31: undefined: mock_store.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestDelRecords_Variations_489(t *testing.T) {
+    authName := "del_test"
+    a := &authenticator{name: authName}
+    testUID := types.ParseUid("usrDel456")
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = nil
+    })
+
+    // Test DB Error
+    t.Run("DBError", func(t *testing.T) {
+        dbErr := errors.New("db delete failed")
+        mockUserDb.On("DelAuthRecords", testUID, authName).Return(dbErr).Once()
+        err := a.DelRecords(testUID)
+        assert.ErrorIs(t, err, dbErr)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success
+    t.Run("Success", func(t *testing.T) {
+        mockUserDb.On("DelAuthRecords", testUID, authName).Return(nil).Once()
+        err := a.DelRecords(testUID)
+        require.NoError(t, err)
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:201:31: undefined: mock_store.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"errors"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	"github.com/tinode/chat/server/store"
+	mock_store "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestGetResetParams_Variations_601(t *testing.T) {
+    authName := "reset_test"
+    a := &authenticator{name: authName}
+    testUID := types.ParseUid("usrReset789")
+    testLogin := "resetuser"
+
+    mockUserDb := new(mock_store.UserDb)
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = nil
+    })
+
+    // Test DB Error
+    t.Run("DBError", func(t *testing.T) {
+        dbErr := errors.New("db get reset failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        params, err := a.GetResetParams(testUID)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, params)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (empty login returned)
+    t.Run("UserNotFound", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelAuth, nil, time.Time{}, nil).Once()
+        params, err := a.GetResetParams(testUID)
+        assert.ErrorIs(t, err, types.ErrNotFound)
+        assert.Nil(t, params)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success
+    t.Run("Success", func(t *testing.T) {
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(testLogin, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        params, err := a.GetResetParams(testUID)
+        require.NoError(t, err)
+        require.NotNil(t, params)
+        assert.Equal(t, testLogin, params["login"])
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:224:31: undefined: mock_store.UserDb
+-------------------------------------------------
+
+Iteration-5
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify/assert
+go get github.com/stretchr/testify/require
+
+Test Implementation:
+func TestParseUid32_ValidNonZeroAndError_000(t *testing.T) {
+	// Arrange: Valid case
+	expectedUid := Uid(6666666666666666666)
+	uidString32 := expectedUid.String32()
+	require.NotEmpty(t, uidString32)
+
+	// Act: Valid case
+	result := ParseUid32(uidString32) // Covers lines 167 (err == nil), 168
+
+	// Assert: Valid case
+	assert.Equal(t, expectedUid, result)
+
+	// Arrange: Decode error case (invalid base32 character '!')
+	// Ensure the invalid string has the same length as a valid one to avoid length errors masking decode errors
+	invalidString32 := strings.Repeat("!", len(uidString32))
+
+	// Act: Decode error case
+	result = ParseUid32(invalidString32) // Covers line 167 (err != nil from decode)
+
+	// Assert: Decode error case
+	assert.Equal(t, ZeroUid, result) // Covers line 170
+
+	// Arrange: Decode error case (invalid length for base32 decode)
+	invalidLenString32 := "aa" // Invalid length
+
+	// Act: Decode error case (length)
+	result = ParseUid32(invalidLenString32) // Covers line 167 (err != nil from length)
+
+	// Assert: Decode error case (length)
+	assert.Equal(t, ZeroUid, result) // Covers line 170
+}
+
+
+Error Message:
+FAIL
+coverage: 17.0% of statements
+FAIL	github.com/tinode/chat/server/store/types	1.363s
+FAIL
+-------------------------------------------------
+
+Iteration-5
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestInit_Variations_512(t *testing.T) {
+    // Test invalid JSON
+    t.Run("InvalidJSON", func(t *testing.T) {
+        a := &authenticator{}
+        invalidJSON := json.RawMessage(`{invalid}`)
+        err := a.Init(invalidJSON, "test_invalid_json")
+        require.Error(t, err)
+        assert.Contains(t, err.Error(), "auth_basic: failed to parse config")
+        assert.False(t, a.IsInitialized())
+    })
+
+    // Test default password length
+    t.Run("DefaultPasswordLength", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_login_length": 2}`)
+        err := a.Init(configJSON, "test_default_pass")
+        require.NoError(t, err)
+        assert.Equal(t, defaultMinPasswordLength, a.minPasswordLength)
+        assert.True(t, a.IsInitialized())
+    })
+
+    // Test default login length
+    t.Run("DefaultLoginLength", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_password_length": 5}`)
+        err := a.Init(configJSON, "test_default_login")
+        require.NoError(t, err)
+        assert.Equal(t, defaultMinLoginLength, a.minLoginLength)
+        assert.True(t, a.IsInitialized())
+    })
+
+    // Test login length exceeding limit
+    t.Run("LoginLengthExceedsLimit", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_login_length": 100}`) // > defaultMaxLoginLength (32)
+        err := a.Init(configJSON, "test_login_limit")
+        require.Error(t, err)
+        assert.Equal(t, "auth_basic: min_login_length exceeds the limit", err.Error())
+        assert.False(t, a.IsInitialized())
+    })
+
+    // Test re-initialization
+    t.Run("Reinitialization", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{}`)
+        err := a.Init(configJSON, "first_init")
+        require.NoError(t, err)
+        assert.True(t, a.IsInitialized())
+
+        err = a.Init(configJSON, "second_init")
+        require.Error(t, err)
+        assert.Equal(t, "auth_basic: already initialized as first_init; second_init", err.Error())
+        // State should remain as per the first initialization
+         assert.Equal(t, "first_init", a.name)
+         assert.Equal(t, defaultMinPasswordLength, a.minPasswordLength)
+         assert.Equal(t, defaultMinLoginLength, a.minLoginLength)
+    })
+
+    // Test zero min lengths explicitly set (should use defaults)
+     t.Run("ZeroMinLengths", func(t *testing.T) {
+        a := &authenticator{}
+        configJSON := json.RawMessage(`{"min_password_length": 0, "min_login_length": 0}`)
+        err := a.Init(configJSON, "test_zero_lengths")
+        require.NoError(t, err)
+        assert.Equal(t, defaultMinPasswordLength, a.minPasswordLength)
+        assert.Equal(t, defaultMinLoginLength, a.minLoginLength)
+        assert.True(t, a.IsInitialized())
+    })
+}
+
+
+Error Message:
+FAIL
+coverage: 35.2% of statements
+FAIL	github.com/tinode/chat/server/auth/basic	0.341s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestAddRecord_Variations_721(t *testing.T) {
+    authName := "test_basic_add"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minPasswordLength: 5,
+        minLoginLength:    3,
+    }
+    testUID := types.ParseUid("usrTesting123")
+    testUser := "testuser"
+    testPass := "password123"
+    secret := []byte(testUser + ":" + testPass)
+    remoteAddr := "192.168.1.1"
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+
+    // Setup mock injection and cleanup
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+
+    // Test Login Policy Failure
+    t.Run("LoginPolicyFail", func(t *testing.T) {
+        // Reset mock expectations for this subtest if necessary
+        // *mockUserDb = mockStore.UserDb{} // Create new mock instance if needed
+
+        rec := &auth.Rec{Uid: testUID}
+        shortUserSecret := []byte("u:" + testPass) // Login too short
+        res, err := a.AddRecord(rec, shortUserSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+        // No DB calls expected
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Password Policy Failure
+    t.Run("PasswordPolicyFail", func(t *testing.T) {
+       // Reset mock expectations for this subtest if necessary
+       // *mockUserDb = mockStore.UserDb{} // Create new mock instance if needed
+
+        rec := &auth.Rec{Uid: testUID}
+        shortPassSecret := []byte(testUser + ":123") // Password too short
+        res, err := a.AddRecord(rec, shortPassSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+         // No DB calls expected
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test DB AddAuthRecord Failure
+    t.Run("DBAddFail", func(t *testing.T) {
+        // Reset mock expectations
+        *mockUserDb = mockStore.UserDb{}
+
+        rec := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Hour)}
+        dbErr := errors.New("db add failed")
+        // Use mock.AnythingOfType for bcrypt hash and time
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).Return(dbErr).Once()
+
+        res, err := a.AddRecord(rec, secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t) // Verify the mock was called
+    })
+
+    // Test Success with Lifetime and LevelNone
+    t.Run("SuccessLifetimeLevelNone", func(t *testing.T) {
+        // Reset mock expectations
+        *mockUserDb = mockStore.UserDb{}
+
+        rec := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Minute * 30), AuthLevel: auth.LevelNone}
+        expectedExpiresApprox := time.Now().Add(time.Minute * 30)
+
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).
+            Run(func(args mock.Arguments) {
+                // Check expiration time with tolerance
+                actualExpires := args.Get(5).(time.Time)
+                assert.WithinDuration(t, expectedExpiresApprox, actualExpires, time.Second*2, "Expiration time mismatch") // Allow 2s tolerance
+            }).Return(nil).Once()
+
+        res, err := a.AddRecord(rec, secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.Equal(t, auth.LevelAuth, res.AuthLevel) // Should be upgraded from LevelNone
+        assert.Contains(t, res.Tags, authName+":"+testUser, "Tag should be added")
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success with Provided AuthLevel and no Tags
+    t.Run("SuccessProvidedLevelNoTags", func(t *testing.T) {
+         // Reset mock expectations
+        *mockUserDb = mockStore.UserDb{}
+
+        aNoTags := &authenticator{ // Authenticator instance specific to this test
+            name:              authName,
+            addToTags:         false, // Tags explicitly disabled
+            minPasswordLength: 5,
+            minLoginLength:    3,
+        }
+        rec := &auth.Rec{Uid: testUID, AuthLevel: auth.LevelAuth} // Explicit level provided, no lifetime
+        mockUserDb.On("AddAuthRecord", testUID, auth.LevelAuth, authName, testUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(nil).Once()
+
+        res, err := aNoTags.AddRecord(rec, secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.Equal(t, auth.LevelAuth, res.AuthLevel)
+        assert.Empty(t, res.Tags, "Tags should not be added")
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test bcrypt failure (conceptual - line 129-130) is hard to test without DI for bcrypt.
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:241:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:281:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:297:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:321:27: undefined: mockStore.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestUpdateRecord_Variations_834(t *testing.T) {
+    authName := "test_basic_upd"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true,
+        minPasswordLength: 6,
+        minLoginLength:    4,
+    }
+    testUID := types.ParseUid("usrUpdate123")
+    oldUser := "olduser"
+    newUser := "newuser123"
+    oldPass := "oldpassword" // Not directly used in mocks, but context
+    newPass := "newpassword123"
+    _ = oldPass // Avoid unused warning
+
+    updateSecretPassOnly := []byte(":" + newPass)        // Update password only, implies old username
+    updateSecretUserPass := []byte(newUser + ":" + newPass) // Update both
+    updateSecretInvalidPass := []byte(newUser + ":123")     // Invalid new password (too short)
+    updateSecretInvalidUser := []byte("nu:" + newPass)      // Invalid new user (too short)
+    remoteAddr := "192.168.1.2"
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+    // Base record for updates
+    baseRec := func() *auth.Rec {
+         // Ensure tags are reset for each test run needing them
+         return &auth.Rec{Uid: testUID, Tags: []string{authName + ":" + oldUser, "other:tag"}}
+    }
+
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        rec := baseRec()
+        invalidSecret := []byte("invalidformat")
+        res, err := a.UpdateRecord(rec, invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test GetAuthRecord DB Failure
+    t.Run("GetAuthRecordFail", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+         rec := baseRec()
+        dbErr := errors.New("get auth failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (GetAuthRecord returns empty login)
+    t.Run("UserNotFound", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        rec := baseRec()
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelAuth, nil, time.Time{}, nil).Once() // Empty login returned
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrNotFound)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Password Only - Success
+    t.Run("SuccessUpdatePasswordOnly", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        rec := baseRec()
+        initialTags := append([]string{}, rec.Tags...) // Copy tags
+
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // Expect update with oldUser, new passhash, no expiry
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, oldUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(nil).Once()
+
+        res, err := a.UpdateRecord(rec, updateSecretPassOnly, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        // Tags should remain unchanged as username didn't change
+        assert.ElementsMatch(t, initialTags, res.Tags)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Check Login Policy Fail for *new* user
+    t.Run("UpdateUserLoginPolicyFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        rec := baseRec()
+        // Need GetAuthRecord to succeed first to get the old login
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // Login policy check happens before unique check or password check
+        res, err := a.UpdateRecord(rec, updateSecretInvalidUser, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t) // Only GetAuthRecord should be called
+    })
+
+    // Test Update Username and Password - Check Uniqueness DB Fail
+    t.Run("UpdateUserCheckUniqueFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        rec := baseRec()
+        dbErr := errors.New("check unique failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // Expect GetAuthUniqueRecord for the *new* user name
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - New Username Duplicate
+    t.Run("UpdateUserDuplicate", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+         rec := baseRec()
+        duplicateUID := types.ParseUid("usrExisting99")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // GetAuthUniqueRecord returns an existing UID for the new username
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(duplicateUID, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrDuplicate)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Check Password Policy Fail
+    t.Run("UpdateUserPasswordPolicyFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+         rec := baseRec()
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        // Mock successful unique check for the new username
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        // Password policy check happens after unique check
+        res, err := a.UpdateRecord(rec, updateSecretInvalidPass, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - DB UpdateAuthRecord Failure
+    t.Run("UpdateUserDBUpdateFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+         rec := baseRec()
+        dbErr := errors.New("db update failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+         // Expect update with newUser, new passhash, no expiry
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, newUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(dbErr).Once()
+
+        res, err := a.UpdateRecord(rec, updateSecretUserPass, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, res)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username and Password - Success with Lifetime
+    t.Run("SuccessUpdateUserPassLifetime", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        // Use a fresh rec with lifetime
+        recWithLifetime := &auth.Rec{Uid: testUID, Lifetime: auth.Duration(time.Hour), Tags: []string{authName + ":" + oldUser, "other:tag"}}
+        expectedExpiresApprox := types.TimeNow().Add(time.Hour) // types.TimeNow() used in source
+
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, newUser, mock.AnythingOfType("[]uint8"), mock.AnythingOfType("time.Time")).
+            Run(func(args mock.Arguments) {
+                actualExpires := args.Get(5).(time.Time)
+                // types.TimeNow() rounds to millisecond, use slightly larger delta
+                assert.WithinDuration(t, expectedExpiresApprox, actualExpires, time.Second, "Expiration time mismatch")
+            }).Return(nil).Once()
+
+        res, err := a.UpdateRecord(recWithLifetime, updateSecretUserPass, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.NotContains(t, res.Tags, authName+":"+oldUser, "Old tag should be removed")
+        assert.Contains(t, res.Tags, "other:tag", "Other tags should be preserved")
+        assert.Contains(t, res.Tags, authName+":"+newUser, "New tag should be added")
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Update Username - Old Tag Not Found (should still work)
+    t.Run("UpdateUserOldTagNotFound", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        // Record *without* the expected old tag
+         recNoOldTag := &auth.Rec{Uid: testUID, Tags: []string{"other:tag"}}
+
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(oldUser, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        mockUserDb.On("GetAuthUniqueRecord", authName, newUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        mockUserDb.On("UpdateAuthRecord", testUID, auth.LevelAuth, authName, newUser, mock.AnythingOfType("[]uint8"), time.Time{}).Return(nil).Once()
+
+        res, err := a.UpdateRecord(recNoOldTag, updateSecretUserPass, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, res)
+        assert.Equal(t, testUID, res.Uid)
+        assert.NotContains(t, res.Tags, authName+":"+oldUser) // Still not present
+        assert.Contains(t, res.Tags, "other:tag")           // Preserved
+        assert.Contains(t, res.Tags, authName+":"+newUser)   // Added
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test bcrypt failure (line 187-188) is hard to test reliably.
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:248:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:263:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:274:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:286:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:297:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:316:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:329:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:343:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:357:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:371:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:371:27: too many errors
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestAuthenticate_Variations_945(t *testing.T) {
+    authName := "test_basic_auth"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true, // Not directly relevant for Authenticate, but part of setup
+        minPasswordLength: 5,
+        minLoginLength:    3,
+    }
+    testUser := "authuser"
+    testPass := "authpass123"
+    testUID := types.ParseUid("usrAuth567")
+    secret := []byte(testUser + ":" + testPass)
+    // Generate a real hash for comparisons
+    hashedPass, err := bcrypt.GenerateFromPassword([]byte(testPass), bcrypt.DefaultCost)
+    require.NoError(t, err, "Failed to generate test hash")
+    remoteAddr := "10.0.0.1"
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        invalidSecret := []byte("badsecret")
+        rec, payload, err := a.Authenticate(invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test GetAuthUniqueRecord DB Failure
+    t.Run("DBGetFail", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+        dbErr := errors.New("db get failed")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (UID is Zero)
+    t.Run("UserNotFound", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        // Mock DB returning ZeroUid, indicating user not found by that unique login
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrFailed, "Should return ErrFailed for non-existent user")
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Expired Record
+    t.Run("RecordExpired", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        expiredTime := time.Now().Add(-time.Hour) // Time in the past
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, expiredTime, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrExpired)
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Invalid Password (bcrypt compare fails)
+    t.Run("InvalidPassword", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+        wrongSecret := []byte(testUser + ":wrongpass")
+        // Mock DB returning the *correct* hash, but the provided password is wrong
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, time.Time{}, nil).Once() // No expiry
+        rec, payload, err := a.Authenticate(wrongSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrFailed, "Should return ErrFailed for wrong password")
+        assert.Nil(t, rec)
+        assert.Nil(t, payload)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success - No Expiry
+    t.Run("SuccessNoExpiry", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+         // Mock DB returning user data with no expiry (time.Time{} is zero time)
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelAuth, hashedPass, time.Time{}, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, rec)
+        assert.Nil(t, payload, "Payload should be nil for basic auth")
+        assert.Equal(t, testUID, rec.Uid)
+        assert.Equal(t, auth.LevelAuth, rec.AuthLevel)
+        assert.Equal(t, auth.Duration(0), rec.Lifetime, "Lifetime should be 0 for non-expiring record")
+        assert.Equal(t, types.StateUndefined, rec.State) // Default state
+        assert.Equal(t, auth.Feature(0), rec.Features) // Default features
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success - With Expiry
+    t.Run("SuccessWithExpiry", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        expiresAt := time.Now().Add(time.Hour * 24)
+        expectedLifetime := time.Until(expiresAt)
+        // Mock DB returning user data with a future expiry time and different AuthLevel (e.g., Root)
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(testUID, auth.LevelRoot, hashedPass, expiresAt, nil).Once()
+        rec, payload, err := a.Authenticate(secret, remoteAddr)
+        require.NoError(t, err)
+        require.NotNil(t, rec)
+        assert.Nil(t, payload)
+        assert.Equal(t, testUID, rec.Uid)
+        assert.Equal(t, auth.LevelRoot, rec.AuthLevel) // Use the level returned by DB
+        // Check lifetime with tolerance because time.Until calculation can have slight variance
+        assert.InDelta(t, expectedLifetime, time.Duration(rec.Lifetime), float64(time.Second), "Lifetime mismatch")
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:244:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:253:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:264:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:276:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:288:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:300:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:313:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:330:27: undefined: mockStore.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestIsUnique_Variations_267(t *testing.T) {
+    authName := "unique_test"
+    a := &authenticator{
+        name:              authName,
+        addToTags:         true, // Not directly relevant for IsUnique
+        minLoginLength:    4,
+        minPasswordLength: 6, // Not directly relevant for IsUnique
+    }
+    testUser := "uniqueuser"
+    testPass := "uniquepass" // Password part is ignored by IsUnique
+    secret := []byte(testUser + ":" + testPass)
+    remoteAddr := "127.0.0.1"
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+    // Test ParseSecret Failure
+    t.Run("ParseSecretFail", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+        invalidSecret := []byte("badsecret")
+        unique, err := a.IsUnique(invalidSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrMalformed)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Login Policy Failure
+    t.Run("LoginPolicyFail", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        shortUserSecret := []byte("usr:" + testPass) // Username "usr" is too short (min 4)
+        unique, err := a.IsUnique(shortUserSecret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrPolicy)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test GetAuthUniqueRecord DB Failure
+    t.Run("DBGetFail", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+        dbErr := errors.New("db get unique failed")
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        assert.ErrorIs(t, err, dbErr)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Username is Unique
+    t.Run("Unique", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        // Mock DB returning ZeroUid, indicating username is not taken
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(types.ZeroUid, auth.LevelNone, nil, time.Time{}, nil).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        require.NoError(t, err)
+        assert.True(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Username is Duplicate
+    t.Run("Duplicate", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        existingUID := types.ParseUid("usrExists11")
+        // Mock DB returning a non-ZeroUid, indicating username is taken
+        mockUserDb.On("GetAuthUniqueRecord", authName, testUser).Return(existingUID, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        unique, err := a.IsUnique(secret, remoteAddr)
+        assert.ErrorIs(t, err, types.ErrDuplicate)
+        assert.False(t, unique)
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:239:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:248:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:258:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:268:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:279:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:290:27: undefined: mockStore.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestDelRecords_Variations_489(t *testing.T) {
+    authName := "del_test"
+    a := &authenticator{name: authName}
+    testUID := types.ParseUid("usrDel456")
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+    // Test DB Error
+    t.Run("DBError", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        dbErr := errors.New("db delete failed")
+        mockUserDb.On("DelAuthRecords", testUID, authName).Return(dbErr).Once()
+        err := a.DelRecords(testUID)
+        assert.ErrorIs(t, err, dbErr)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success
+    t.Run("Success", func(t *testing.T) {
+         *mockUserDb = mockStore.UserDb{}
+        mockUserDb.On("DelAuthRecords", testUID, authName).Return(nil).Once()
+        err := a.DelRecords(testUID)
+        require.NoError(t, err)
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:230:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:239:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:249:27: undefined: mockStore.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store" // Correct mock import
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestGetResetParams_Variations_601(t *testing.T) {
+    authName := "reset_test"
+    a := &authenticator{name: authName}
+    testUID := types.ParseUid("usrReset789")
+    testLogin := "resetuser"
+
+    mockUserDb := new(mockStore.UserDb) // Use correct mock type
+    originalStoreUsers := store.Users
+    store.Users = mockUserDb
+    t.Cleanup(func() {
+        store.Users = originalStoreUsers
+    })
+
+    // Test DB Error
+    t.Run("DBError", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        dbErr := errors.New("db get reset failed")
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelNone, nil, time.Time{}, dbErr).Once()
+        params, err := a.GetResetParams(testUID)
+        assert.ErrorIs(t, err, dbErr)
+        assert.Nil(t, params)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test User Not Found (empty login returned by DB)
+    t.Run("UserNotFound", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return("", auth.LevelAuth, nil, time.Time{}, nil).Once() // Empty login signifies not found for this auth scheme
+        params, err := a.GetResetParams(testUID)
+        assert.ErrorIs(t, err, types.ErrNotFound)
+        assert.Nil(t, params)
+        mockUserDb.AssertExpectations(t)
+    })
+
+    // Test Success
+    t.Run("Success", func(t *testing.T) {
+        *mockUserDb = mockStore.UserDb{}
+        mockUserDb.On("GetAuthRecord", testUID, authName).Return(testLogin, auth.LevelAuth, nil, time.Time{}, nil).Once()
+        params, err := a.GetResetParams(testUID)
+        require.NoError(t, err)
+        require.NotNil(t, params)
+        assert.Equal(t, testLogin, params["login"])
+        mockUserDb.AssertExpectations(t)
+    })
+}
+
+
+Error Message:
+server/auth/basic/auth_basic_test.go:232:30: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:241:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:252:27: undefined: mockStore.UserDb
+server/auth/basic/auth_basic_test.go:262:27: undefined: mockStore.UserDb
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"encoding/json"
+	"errors"
+    "strings" // Added for string manipulation
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/auth"
+	mockStore "github.com/tinode/chat/mocks/server/store"
+	"github.com/tinode/chat/server/store"
+	"github.com/tinode/chat/server/store/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestCheckLoginPolicy_Edges_147(t *testing.T) {
+    a := &authenticator{
+        minLoginLength:    3, // Use values different from defaults
+         // max is hardcoded defaultMaxLoginLength = 32
+    }
+
+    testCases := []struct {
+        name    string
+        login   string
+        wantErr bool
+        errType error
+    }{
+        {"TooShort", "ab", true, types.ErrPolicy},
+        {"MinLength", "abc", false, nil},
+        {"ValidMid", "user_name.123", false, nil},
+        {"MaxLength", strings.Repeat("a", defaultMaxLoginLength), false, nil},
+        {"TooLong", strings.Repeat("a", defaultMaxLoginLength+1), true, types.ErrPolicy},
+        {"InvalidStartChar", "_abc", true, types.ErrPolicy},
+        {"InvalidEndChar", "abc.", true, types.ErrPolicy},
+        {"InvalidMiddleChar", "ab c", true, types.ErrPolicy},
+        {"InvalidChars", "user!&*()", true, types.ErrPolicy},
+        {"NumbersOnly", "12345", false, nil},
+        {"UnicodeLetters", "用户名", false, nil},
+         {"UnicodeMix", "user用户1", false, nil},
+        {"StartsWithNumber", "1user", false, nil},
+        {"EndsWithNumber", "user1", false, nil},
+        {"SingleCharTooShort", "a", true, types.ErrPolicy}, // Checks min length before pattern
+        {"TwoCharsTooShort", "a1", true, types.ErrPolicy}, // Checks min length before pattern
+    }
+
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            err := a.checkLoginPolicy(tc.login)
+            if tc.wantErr {
+                require.Error(t, err)
+                if tc.errType != nil {
+                    assert.ErrorIs(t, err, tc.errType)
+                }
+            } else {
+                assert.NoError(t, err)
+            }
+        })
+    }
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server/auth/basic tested by
+	github.com/tinode/chat/server/auth/basic.test imports
+	// Added for string manipulation: "// Added for string manipulation" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+Iteration-3
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/golang/mock/gomock"
+	concurrencyMocks "github.com/tinode/chat/mocks/server/concurrency" // Alias for mocks
+    "github.com/tinode/chat/server/concurrency"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+go get github.com/golang/mock/gomock@v1.6.0
+
+Test Implementation:
+func TestQueueOut_MultiSuccess_789(t *testing.T) {
+  // Arrange
+  multiSendChan := make(chan any, 1)
+  multiSess := &Session{
+    sid:          "multiSid",
+    send:         multiSendChan,
+    proto:        MULTIPLEX, // Make it multiplex to trigger schedule
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  s := &Session{
+    sid:          "origSid",
+    multi:        multiSess,
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{Id: "msg1"}
+
+  // Mock cluster scheduling
+  mockPool := &mockGoRoutinePool{}
+  mockPool.On("Schedule", gomock.Any()).Times(1) // Expect schedule to be called
+  originalCluster := globals.cluster
+  globals.cluster = &Cluster{proxyEventQueue: mockPool}
+  defer func() { globals.cluster = originalCluster }()
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should return true on successful multi delegation")
+  require.Len(t, multiSendChan, 1, "Message should be in multi session's send channel")
+  sentMsg := <-multiSendChan
+  require.IsType(t, &ServerComMessage{}, sentMsg, "Sent message type mismatch")
+  assert.Same(t, s, sentMsg.(*ServerComMessage).sess, "Sent message should have original session attached")
+  mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+server/session_test.go:1372:15: undefined: mockGoRoutinePool
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/golang/mock/gomock"
+	concurrencyMocks "github.com/tinode/chat/mocks/server/concurrency" // Alias for mocks
+    "github.com/tinode/chat/server/concurrency"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+go get github.com/golang/mock/gomock@v1.6.0
+
+Test Implementation:
+func TestQueueOut_DirectMultiplexSuccess_404(t *testing.T) {
+  // Arrange
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        MULTIPLEX, // Is multiplex
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+    proxiedTopic: "proxyTopic",
+  }
+  msg := &ServerComMessage{Id: "msg1"}
+
+  // Mock cluster scheduling
+  mockPool := &mockGoRoutinePool{}
+  mockPool.On("Schedule", gomock.Any()).Times(1) // Expect schedule to be called
+  originalCluster := globals.cluster
+  globals.cluster = &Cluster{proxyEventQueue: mockPool}
+  defer func() { globals.cluster = originalCluster }()
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should return true on successful send")
+  require.Len(t, sendChan, 1, "Message should be in the send channel")
+  assert.Same(t, msg, <-sendChan, "Correct message should be sent")
+  mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+server/session_test.go:1393:15: undefined: mockGoRoutinePool
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+    "sync/atomic"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestCleanUp_Expired_707(t *testing.T) {
+  // Arrange
+  doneChan := make(chan *ClientComMessage, 1)
+  supdChan := make(chan *sessionUpdate, 1) // For unsubAll/stopSession if needed
+
+  s := &Session{
+    sid:          "expiredSid",
+    send:         make(chan any, 1),
+    stop:         make(chan any, 1),
+    detach:       make(chan string, 1),
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+    subs: map[string]*Subscription{
+      "topic1": {
+        done: doneChan,
+        supd: supdChan,
+      },
+    },
+  }
+  s.inflightReqs.Add(1) // Simulate one inflight request
+
+  // Mock session store interaction (expect NO Delete call)
+  mockSS := &mockSessionStore{} // Create a simple mock
+  originalSS := globals.sessionStore
+  globals.sessionStore = mockSS
+  defer func() { globals.sessionStore = originalSS }()
+
+  // Act
+  go func() {
+    time.Sleep(10 * time.Millisecond) // Give cleanUp time to potentially block
+    s.inflightReqs.Done()             // Unblock Wait
+  }()
+  s.cleanUp(true) // expired = true
+
+  // Assert
+  assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating), "terminating flag should be set")
+  assert.Nil(t, s.inflightReqs, "inflightReqs should be nilled")
+  assert.False(t, s.background, "background flag should be false")
+  assert.Equal(t, 0, mockSS.deleteCalls, "sessionStore.Delete should NOT be called") // Verify mock
+
+  // Verify unsubAll was called (check channel)
+  select {
+  case msg := <-doneChan:
+    assert.Same(t, s, msg.sess)
+    assert.False(t, msg.init)
+  case <-time.After(50 * time.Millisecond):
+    t.Error("unsubAll did not send message to done channel")
+  }
+
+  // Verify stopSession was called (check stop channel closed)
+  select {
+  case _, ok := <-s.stop:
+    assert.False(t, ok, "stop channel should be closed by stopSession")
+  case <-time.After(50 * time.Millisecond):
+    t.Error("stopSession did not close stop channel")
+  }
+}
+
+
+Error Message:
+server/session_test.go:1433:13: undefined: mockSessionStore
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+    "sync/atomic"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+go get github.com/stretchr/testify
+
+Test Implementation:
+func TestCleanUp_NotExpired_808(t *testing.T) {
+  // Arrange
+  doneChan := make(chan *ClientComMessage, 1)
+  s := &Session{
+    sid:          "notExpiredSid",
+    send:         make(chan any, 1),
+    stop:         make(chan any, 1),
+    detach:       make(chan string, 1),
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+    subs: map[string]*Subscription{
+      "topic1": {done: doneChan},
+    },
+  }
+  s.inflightReqs.Add(1) // Simulate one inflight request
+
+  // Mock session store interaction (expect ONE Delete call)
+  mockSS := &mockSessionStore{}
+  originalSS := globals.sessionStore
+  globals.sessionStore = mockSS
+  defer func() { globals.sessionStore = originalSS }()
+
+  // Act
+  go func() {
+    time.Sleep(10 * time.Millisecond)
+    s.inflightReqs.Done()
+  }()
+  s.cleanUp(false) // expired = false
+
+  // Assert
+  assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating))
+  assert.Nil(t, s.inflightReqs)
+  assert.False(t, s.background)
+  require.Equal(t, 1, mockSS.deleteCalls, "sessionStore.Delete should be called once")
+  assert.Equal(t, s.sid, mockSS.deletedSid, "Correct session ID should be passed to Delete")
+
+  // Verify unsubAll was called
+  select {
+  case <-doneChan:
+    // Message received, good.
+  case <-time.After(50 * time.Millisecond):
+    t.Error("unsubAll did not send message to done channel")
+  }
+
+    // Verify stopSession was called (check stop channel closed)
+  select {
+  case _, ok := <-s.stop:
+    assert.False(t, ok, "stop channel should be closed by stopSession")
+  case <-time.After(50 * time.Millisecond):
+    t.Error("stopSession did not close stop channel")
+  }
+}
+
+
+Error Message:
+server/session_test.go:1428:13: undefined: mockSessionStore
+-------------------------------------------------
+
+Iteration-4
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestGetSub_Multiplexer_223(t *testing.T) {
+  // Arrange
+  expectedSub := &Subscription{}
+  topic := "testTopic"
+  multiSess := &Session{
+    subs: map[string]*Subscription{
+      topic: expectedSub,
+    },
+  }
+  s := &Session{
+    multi: multiSess,
+    subs:  make(map[string]*Subscription), // Should not be used
+  }
+
+  // Act
+  actualSub := s.getSub(topic)
+
+  // Assert
+  assert.Same(t, expectedSub, actualSub, "Should return the subscription from the multiplexer")
+}
+
+
+Error Message:
+FAIL
+coverage: 19.1% of statements
+FAIL	github.com/tinode/chat/server	0.972s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestScheduleClusterWriteLoop_NilEventQueue_444(t *testing.T) {
+  // Arrange
+  s := &Session{proxiedTopic: "test"}
+  originalCluster := globals.cluster
+  // Setup cluster but with nil event queue
+  globals.cluster = &Cluster{
+    proxyEventQueue: nil, // Explicitly nil
+    thisNodeName:    "testNode",
+    sig:             "testsig",
+    fingerprint:     123,
+    masterNode:      "master",
+  }
+  defer func() { globals.cluster = originalCluster }()
+
+  // Act & Assert (should not panic)
+  assert.NotPanics(t, func() { s.scheduleClusterWriteLoop() })
+}
+
+
+Error Message:
+server/session_test.go:1465:3: unknown field sig in struct literal of type Cluster
+server/session_test.go:1467:3: unknown field masterNode in struct literal of type Cluster
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode3xx_890(t *testing.T) {
+  // Arrange
+  // Reset stats before test
+  statsMu.Lock()
+  stats = make(map[string]float64)
+  statsHist = make(map[string]*summary)
+  statsMu.Unlock()
+
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        WEBSOCK, // Not cluster
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{
+    Id: "msgCtrl",
+    Ctrl: &MsgServerCtrl{
+      Code:      304, // Valid 3xx code
+      Timestamp: time.Now(),
+    },
+  }
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should succeed")
+  require.Len(t, sendChan, 1, "Message should be sent")
+  statsMu.Lock()
+  assert.Equal(t, 1.0, stats["CtrlCodesTotal3xx"], "3xx counter should be incremented")
+  statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1460:2: undefined: statsMu
+server/session_test.go:1461:2: undefined: stats
+server/session_test.go:1462:2: undefined: statsHist
+server/session_test.go:1462:31: undefined: summary
+server/session_test.go:1463:2: undefined: statsMu
+server/session_test.go:1487:2: undefined: statsMu
+server/session_test.go:1488:23: undefined: stats
+server/session_test.go:1489:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode4xx_112(t *testing.T) {
+  // Arrange
+  statsMu.Lock()
+  stats = make(map[string]float64)
+  statsHist = make(map[string]*summary)
+  statsMu.Unlock()
+
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        WEBSOCK, // Not cluster
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{
+    Id: "msgCtrl",
+    Ctrl: &MsgServerCtrl{
+      Code:      404, // Valid 4xx code
+      Timestamp: time.Now(),
+    },
+  }
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should succeed")
+  require.Len(t, sendChan, 1, "Message should be sent")
+  statsMu.Lock()
+  assert.Equal(t, 1.0, stats["CtrlCodesTotal4xx"], "4xx counter should be incremented")
+  statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: statsMu
+server/session_test.go:1460:2: undefined: stats
+server/session_test.go:1461:2: undefined: statsHist
+server/session_test.go:1461:31: undefined: summary
+server/session_test.go:1462:2: undefined: statsMu
+server/session_test.go:1486:2: undefined: statsMu
+server/session_test.go:1487:23: undefined: stats
+server/session_test.go:1488:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode5xx_334(t *testing.T) {
+  // Arrange
+  statsMu.Lock()
+  stats = make(map[string]float64)
+  statsHist = make(map[string]*summary)
+  statsMu.Unlock()
+
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        WEBSOCK, // Not cluster
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{
+    Id: "msgCtrl",
+    Ctrl: &MsgServerCtrl{
+      Code:      503, // Valid 5xx code
+      Timestamp: time.Now(),
+    },
+  }
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should succeed")
+  require.Len(t, sendChan, 1, "Message should be sent")
+  statsMu.Lock()
+  assert.Equal(t, 1.0, stats["CtrlCodesTotal5xx"], "5xx counter should be incremented")
+  statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: statsMu
+server/session_test.go:1460:2: undefined: stats
+server/session_test.go:1461:2: undefined: statsHist
+server/session_test.go:1461:31: undefined: summary
+server/session_test.go:1462:2: undefined: statsMu
+server/session_test.go:1486:2: undefined: statsMu
+server/session_test.go:1487:23: undefined: stats
+server/session_test.go:1488:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_CtrlWithTimestamp_AddsLatencyStat_556(t *testing.T) {
+  // Arrange
+  statsMu.Lock()
+  stats = make(map[string]float64)
+  statsHist = make(map[string]*summary)
+  statsMu.Unlock()
+  // Initialize histogram
+  statsAddHistSample("RequestLatency", 0) // Needs initialization
+
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        WEBSOCK, // Not cluster
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{
+    Id: "msgCtrlLatency",
+    Ctrl: &MsgServerCtrl{
+      Code:      200,
+      Timestamp: time.Now().Add(-50 * time.Millisecond), // Simulate some latency
+    },
+  }
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should succeed")
+  require.Len(t, sendChan, 1, "Message should be sent")
+  statsMu.Lock()
+  hist, ok := statsHist["RequestLatency"]
+  require.True(t, ok, "RequestLatency histogram should exist")
+  // Check if count increased, exact value depends on timing
+  assert.GreaterOrEqual(t, hist.Count(), int64(1), "RequestLatency count should increase")
+  statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: statsMu
+server/session_test.go:1460:2: undefined: stats
+server/session_test.go:1461:2: undefined: statsHist
+server/session_test.go:1461:31: undefined: summary
+server/session_test.go:1462:2: undefined: statsMu
+server/session_test.go:1488:2: undefined: statsMu
+server/session_test.go:1489:14: undefined: statsHist
+server/session_test.go:1493:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/tinode/chat/server/concurrency"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_DirectMultiplexSuccess_404(t *testing.T) {
+  // Arrange
+  sendChan := make(chan any, 1)
+  s := &Session{
+    sid:          "testSid",
+    send:         sendChan,
+    proto:        MULTIPLEX, // Is multiplex
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+    proxiedTopic: "proxyTopic",
+  }
+  msg := &ServerComMessage{Id: "msg1"}
+
+  // Mock cluster scheduling
+  mockPool := &mockGoRoutinePool{}
+  mockPool.On("Schedule", mock.AnythingOfType("concurrency.Task")).Run(func(args mock.Arguments) {
+    task := args.Get(0).(concurrency.Task)
+    // Optionally execute the task immediately in the test to check its behavior,
+    // or just verify it was scheduled.
+    // task()
+  }).Return().Once() // Expect schedule to be called once
+
+  originalCluster := globals.cluster
+  globals.cluster = &Cluster{proxyEventQueue: mockPool}
+  defer func() { globals.cluster = originalCluster }()
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should return true on successful send")
+  require.Len(t, sendChan, 1, "Message should be in the send channel")
+  assert.Same(t, msg, <-sendChan, "Correct message should be sent")
+  mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+server/session_test.go:1473:15: undefined: mockGoRoutinePool
+server/session_test.go:1475:3: declared and not used: task
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+  "github.com/tinode/chat/server/concurrency"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestQueueOut_MultiSuccess_789(t *testing.T) {
+  // Arrange
+  multiSendChan := make(chan any, 1)
+  multiSess := &Session{
+    sid:          "multiSid",
+    send:         multiSendChan,
+    proto:        MULTIPLEX, // Make it multiplex to trigger schedule
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+    proxiedTopic: "proxyTopic",
+  }
+  s := &Session{
+    sid:          "origSid",
+    multi:        multiSess,
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour),
+  }
+  msg := &ServerComMessage{Id: "msg1"}
+
+  // Mock cluster scheduling
+  mockPool := &mockGoRoutinePool{}
+  mockPool.On("Schedule", mock.AnythingOfType("concurrency.Task")).Return().Once() // Expect schedule to be called
+  originalCluster := globals.cluster
+  globals.cluster = &Cluster{proxyEventQueue: mockPool}
+  defer func() { globals.cluster = originalCluster }()
+
+  // Act
+  result := s.queueOut(msg)
+
+  // Assert
+  assert.True(t, result, "queueOut should return true on successful multi delegation")
+  require.Len(t, multiSendChan, 1, "Message should be in multi session's send channel")
+  sentMsg := <-multiSendChan
+  require.IsType(t, &ServerComMessage{}, sentMsg, "Sent message type mismatch")
+  assert.Same(t, s, sentMsg.(*ServerComMessage).sess, "Sent message should have original session attached")
+  mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+server/session_test.go:1478:15: undefined: mockGoRoutinePool
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestCleanUp_Expired_707(t *testing.T) {
+  // Arrange
+  doneChan := make(chan *ClientComMessage, 1)
+  stopChan := make(chan any, 1) // Use buffered to prevent blocking if stopSession closes it
+
+  s := &Session{
+    sid:          "expiredSid",
+    send:         make(chan any, 1),
+    stop:         stopChan,
+    detach:       make(chan string, 1),
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+    subs: map[string]*Subscription{
+      "topic1": {
+        done: doneChan,
+        // supd: supdChan, // Not needed for this test path
+      },
+    },
+  }
+  s.inflightReqs.Add(1) // Simulate one inflight request
+
+  // Mock session store interaction (expect NO Delete call)
+  mockSS := &mockSessionStore{}
+  originalSS := globals.sessionStore
+  globals.sessionStore = mockSS
+  defer func() { globals.sessionStore = originalSS }()
+
+  // Act
+  // Use a goroutine to simulate the inflight request finishing *after* Wait is called
+  waitStarted := make(chan bool)
+  go func() {
+    <-waitStarted // Ensure Wait has been called
+    time.Sleep(10 * time.Millisecond)
+    s.inflightReqs.Done()
+  }()
+
+  // Manually patch stopSession to close the stop channel for verification
+  originalStopSession := s.stopSession
+  s.stopSession = func(err error) {
+    close(s.stop)
+    originalStopSession(err) // call original if needed, though likely nil here
+  }
+  defer func() { s.stopSession = originalStopSession }() // Restore original
+
+  // Wrap the Wait call to signal the goroutine
+  originalWait := s.inflightReqs.Wait
+  s.inflightReqs.Wait = func() {
+    close(waitStarted)
+    originalWait()
+  }
+
+  s.cleanUp(true) // expired = true
+
+  // Assert
+  assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating), "terminating flag should be set")
+  assert.Nil(t, s.inflightReqs, "inflightReqs should be nilled after cleanup finishes")
+  assert.False(t, s.background, "background flag should be false")
+  mockSS.AssertNotCalled(t, "Delete", mock.Anything) // Verify Delete was NOT called
+
+  // Verify unsubAll was called (check channel)
+  select {
+  case msg := <-doneChan:
+    assert.Same(t, s, msg.sess)
+    assert.False(t, msg.init)
+  case <-time.After(100 * time.Millisecond):
+    t.Error("unsubAll did not send message to done channel")
+  }
+
+  // Verify stopSession was called (check stop channel closed)
+  select {
+  case _, ok := <-s.stop:
+    assert.False(t, ok, "stop channel should be closed by stopSession")
+  case <-time.After(100 * time.Millisecond):
+    t.Error("stopSession did not close stop channel")
+  }
+}
+
+
+Error Message:
+server/session_test.go:1482:13: undefined: mockSessionStore
+server/session_test.go:1498:2: cannot assign to s.stopSession (neither addressable nor a map index expression)
+server/session_test.go:1502:17: cannot assign to s.stopSession (neither addressable nor a map index expression)
+server/session_test.go:1506:2: cannot assign to s.inflightReqs.Wait (neither addressable nor a map index expression)
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/tinode/chat/server/store/types"
+)
+
+Required Library Installation
+# No new libraries needed
+
+Test Implementation:
+func TestCleanUp_NotExpired_808(t *testing.T) {
+  // Arrange
+  doneChan := make(chan *ClientComMessage, 1)
+  stopChan := make(chan any, 1)
+  sid := "notExpiredSid"
+
+  s := &Session{
+    sid:          sid,
+    send:         make(chan any, 1),
+    stop:         stopChan,
+    detach:       make(chan string, 1),
+    inflightReqs: newBoundedWaitGroup(1),
+    bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+    subs: map[string]*Subscription{
+      "topic1": {done: doneChan},
+    },
+  }
+  s.inflightReqs.Add(1) // Simulate one inflight request
+
+  // Mock session store interaction (expect ONE Delete call)
+  mockSS := &mockSessionStore{}
+  mockSS.On("Delete", s).Return().Once() // Expect Delete to be called exactly once with s
+  originalSS := globals.sessionStore
+  globals.sessionStore = mockSS
+  defer func() { globals.sessionStore = originalSS }()
+
+  // Act
+  waitStarted := make(chan bool)
+  go func() {
+    <-waitStarted
+    time.Sleep(10 * time.Millisecond)
+    s.inflightReqs.Done()
+  }()
+
+  // Patch stopSession
+  originalStopSession := s.stopSession
+  s.stopSession = func(err error) {
+      close(s.stop)
+      originalStopSession(err)
+  }
+  defer func() { s.stopSession = originalStopSession }()
+
+  // Wrap Wait
+  originalWait := s.inflightReqs.Wait
+  s.inflightReqs.Wait = func() {
+    close(waitStarted)
+    originalWait()
+  }
+
+  s.cleanUp(false) // expired = false
+
+  // Assert
+  assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating))
+  assert.Nil(t, s.inflightReqs)
+  assert.False(t, s.background)
+  mockSS.AssertExpectations(t) // Verify Delete(s) was called
+
+  // Verify unsubAll was called
+  select {
+  case msg := <-doneChan:
+    assert.Same(t, s, msg.sess)
+  case <-time.After(100 * time.Millisecond):
+    t.Error("unsubAll did not send message to done channel")
+  }
+
+  // Verify stopSession was called
+  select {
+  case _, ok := <-s.stop:
+    assert.False(t, ok, "stop channel should be closed by stopSession")
+  case <-time.After(100 * time.Millisecond):
+    t.Error("stopSession did not close stop channel")
+  }
+}
+
+
+Error Message:
+server/session_test.go:1479:13: undefined: mockSessionStore
+server/session_test.go:1495:2: cannot assign to s.stopSession (neither addressable nor a map index expression)
+server/session_test.go:1499:17: cannot assign to s.stopSession (neither addressable nor a map index expression)
+server/session_test.go:1503:2: cannot assign to s.inflightReqs.Wait (neither addressable nor a map index expression)
+-------------------------------------------------
+
+Iteration-5
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestGetSub_MultiplexDelegation_987(t *testing.T) {
+    // Arrange
+    expectedSub := &Subscription{}
+    topic := "delegatedGetTopic"
+    multiSess := &Session{
+        subs: map[string]*Subscription{
+            topic: expectedSub,
+        },
+    }
+    s := &Session{
+        multi: multiSess,
+        subs:  make(map[string]*Subscription), // Should not be used
+    }
+
+    // Act
+    actualSub := s.getSub(topic)
+
+    // Assert
+    assert.Same(t, expectedSub, actualSub, "Should return the subscription from the multiplexer")
+}
+
+
+Error Message:
+FAIL
+coverage: 19.1% of statements
+FAIL	github.com/tinode/chat/server	1.123s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/store/types"
+    "github.com/tinode/chat/server/concurrency" // Import concurrency for Task type if needed, assuming Pool interface
+)
+
+Test Implementation:
+func TestScheduleClusterWriteLoop_Valid_121(t *testing.T) {
+    // Arrange
+    s := &Session{proxiedTopic: "testTopic"}
+    mockPool := &mockPool{} // Use the local mockPool struct
+    mockPool.On("Schedule", mock.AnythingOfType("func()")).Return().Once()
+
+    originalCluster := globals.cluster
+    globals.cluster = &Cluster{proxyEventQueue: mockPool}
+    defer func() { globals.cluster = originalCluster }()
+
+    // Act
+    s.scheduleClusterWriteLoop()
+
+    // Assert
+    mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server tested by
+	github.com/tinode/chat/server.test imports
+	// Import concurrency for Task type if needed, assuming Pool interface: "// Import concurrency for Task type if needed, assuming Pool interface" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_TerminatingSession_246(t *testing.T) {
+    // Arrange
+    s := &Session{
+        sid:          "terminatingSid",
+        terminating:  1, // Mark as terminating
+        send:         make(chan any, 1),
+        inflightReqs: newBoundedWaitGroup(1), // Avoid nil panic in potential cleanup
+        bkgTimer:     time.NewTimer(1 * time.Hour), // Avoid nil panic
+    }
+    // Need to add Done() for inflightReqs to avoid blocking in potential cleanup paths
+    s.inflightReqs.Done() // Call Done as we are not adding any requests
+
+    msg := &ServerComMessage{}
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should return true for terminating session")
+    assert.Len(t, s.send, 0, "Message should not be sent to terminating session")
+}
+
+
+Error Message:
+panic: boundedWaitGroup.Done() called before Add().
+	 [recovered]
+	panic: boundedWaitGroup.Done() called before Add().
+	
+
+goroutine 85 [running]:
+testing.tRunner.func1.2({0x1062412a0, 0x14000cf4810})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x1062412a0?, 0x14000cf4810?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).Panicln(0x14000646ab0, {0x14000cd4eb8?, 0x14000cd4ec8?, 0x105b30c28?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:317 +0x68
+github.com/tinode/chat/server.(*boundedWaitGroup).Done(0x14000641308)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/sessionstore.go:52 +0xe4
+github.com/tinode/chat/server.TestQueueOut_TerminatingSession_246(0x14000cf8680)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/session_test.go:1467 +0x134
+testing.tRunner(0x14000cf8680, 0x1065feeb8)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server	0.943s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+     "github.com/tinode/chat/server/concurrency" // Import concurrency for Pool interface
+)
+
+Test Implementation:
+func TestQueueOut_MultiSuccess_357(t *testing.T) {
+    // Arrange
+    multiSendChan := make(chan any, 1)
+    mockPool := &mockPool{} // Use local mockPool
+    mockPool.On("Schedule", mock.AnythingOfType("func()")).Return().Once()
+
+    multiSess := &Session{
+        sid:          "multiSid",
+        send:         multiSendChan,
+        proto:        MULTIPLEX, // Make it multiplex to trigger schedule
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+        proxiedTopic: "proxyTopic",
+    }
+    multiSess.inflightReqs.Done() // Avoid blocking
+
+    s := &Session{
+        sid:          "origSid",
+        multi:        multiSess,
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+     s.inflightReqs.Done() // Avoid blocking
+
+    msg := &ServerComMessage{Id: "msg1"}
+
+    originalCluster := globals.cluster
+    globals.cluster = &Cluster{proxyEventQueue: mockPool}
+    defer func() { globals.cluster = originalCluster }()
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should return true on successful multi delegation")
+    require.Len(t, multiSendChan, 1, "Message should be in multi session's send channel")
+    sentMsg := <-multiSendChan
+    require.IsType(t, &ServerComMessage{}, sentMsg, "Sent message type mismatch")
+    assert.Same(t, s, sentMsg.(*ServerComMessage).sess, "Sent message should have original session attached")
+    mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server tested by
+	github.com/tinode/chat/server.test imports
+	// Import concurrency for Pool interface: "// Import concurrency for Pool interface" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_MultiQueueFull_468(t *testing.T) {
+    // Arrange
+    multiSendChan := make(chan any) // Unbuffered channel, will block/fail immediately
+    multiSess := &Session{
+        sid:          "multiSid",
+        send:         multiSendChan,
+        proto:        MULTIPLEX,
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+        proxiedTopic: "proxyTopic",
+    }
+    multiSess.inflightReqs.Done()
+
+    s := &Session{
+        sid:          "origSid",
+        multi:        multiSess,
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    msg := &ServerComMessage{Id: "msg1"}
+
+    // No cluster mock needed as it won't reach scheduleClusterWriteLoop
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.False(t, result, "queueOut should return false when multi queue is full")
+    assert.Len(t, multiSendChan, 0, "Message should not be sent")
+}
+
+
+Error Message:
+panic: boundedWaitGroup.Done() called before Add().
+	 [recovered]
+	panic: boundedWaitGroup.Done() called before Add().
+	
+
+goroutine 85 [running]:
+testing.tRunner.func1.2({0x1062412a0, 0x140005acf20})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x1062412a0?, 0x140005acf20?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).Panicln(0x1400083ff50, {0x14000e40ea8?, 0x14000e40eb8?, 0x105b30c28?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:317 +0x68
+github.com/tinode/chat/server.(*boundedWaitGroup).Done(0x14000841410)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/sessionstore.go:52 +0xe4
+github.com/tinode/chat/server.TestQueueOut_MultiQueueFull_468(0x14000e62820)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/session_test.go:1468 +0x148
+testing.tRunner(0x14000e62820, 0x1065feeb0)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server	0.945s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_CtrlTimestampLatency_579(t *testing.T) {
+    // Arrange
+    resetStats() // Reset stats before test
+    initStatsHist("RequestLatency") // Ensure histogram exists
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    startTime := time.Now().Add(-50 * time.Millisecond) // Simulate latency
+    msg := &ServerComMessage{
+        Id: "msgCtrlLatency",
+        Ctrl: &MsgServerCtrl{
+            Code:      200,
+            Timestamp: startTime,
+        },
+    }
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+
+    statsMu.Lock()
+    hist, ok := statsHist["RequestLatency"]
+    require.True(t, ok, "RequestLatency histogram should exist")
+    // Check if count increased. Timing makes exact value check hard.
+    assert.GreaterOrEqual(t, hist.Count(), int64(1), "RequestLatency count should increase by at least 1")
+    statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: resetStats
+server/session_test.go:1460:2: undefined: initStatsHist
+server/session_test.go:1488:2: undefined: statsMu
+server/session_test.go:1489:14: undefined: statsHist
+server/session_test.go:1493:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+     "github.com/stretchr/testify/mock"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+    "github.com/tinode/chat/server/concurrency" // Import concurrency for Pool interface
+)
+
+Test Implementation:
+func TestQueueOut_CtrlTimestampCluster_680(t *testing.T) {
+    // Arrange
+    resetStats()
+    // No need to init histogram as it shouldn't be touched
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        MULTIPLEX, // Is cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+        proxiedTopic: "proxyTopic", // Needed for scheduleClusterWriteLoop
+    }
+     s.inflightReqs.Done()
+
+    startTime := time.Now().Add(-50 * time.Millisecond)
+    msg := &ServerComMessage{
+        Id: "msgCtrlLatencyCluster",
+        Ctrl: &MsgServerCtrl{
+            Code:      200,
+            Timestamp: startTime,
+        },
+    }
+
+    // Mock cluster scheduling as it's called for MULTIPLEX
+    mockPool := &mockPool{}
+    mockPool.On("Schedule", mock.AnythingOfType("func()")).Return().Once()
+    originalCluster := globals.cluster
+    globals.cluster = &Cluster{proxyEventQueue: mockPool}
+    defer func() { globals.cluster = originalCluster }()
+
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+
+    statsMu.Lock()
+    _, ok := statsHist["RequestLatency"]
+     // Histogram should ideally not exist or have count 0 if it existed before
+    if ok {
+         assert.Equal(t, int64(0), statsHist["RequestLatency"].Count(), "RequestLatency count should be 0 for cluster session")
+    }
+    statsMu.Unlock()
+    mockPool.AssertExpectations(t) // Ensure scheduler was called
+}
+
+
+Error Message:
+go: github.com/tinode/chat/server tested by
+	github.com/tinode/chat/server.test imports
+	// Import concurrency for Pool interface: "// Import concurrency for Pool interface" is not a package path; see 'go help packages'
+
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode2xx_791(t *testing.T) {
+    // Arrange
+    resetStats()
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    msg := &ServerComMessage{
+        Id: "msgCtrl2xx",
+        Ctrl: &MsgServerCtrl{
+            Code:      201, // Valid 2xx code
+            Timestamp: time.Time{}, // No latency stat check needed here
+        },
+    }
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+    statsMu.Lock()
+    assert.Equal(t, 1.0, stats["CtrlCodesTotal2xx"], "2xx counter should be incremented")
+    statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: resetStats
+server/session_test.go:1485:2: undefined: statsMu
+server/session_test.go:1486:23: undefined: stats
+server/session_test.go:1487:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode3xx_902(t *testing.T) {
+    // Arrange
+    resetStats()
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    msg := &ServerComMessage{
+        Id: "msgCtrl3xx",
+        Ctrl: &MsgServerCtrl{
+            Code:      304, // Valid 3xx code
+            Timestamp: time.Time{},
+        },
+    }
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+    statsMu.Lock()
+    assert.Equal(t, 1.0, stats["CtrlCodesTotal3xx"], "3xx counter should be incremented")
+    statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: resetStats
+server/session_test.go:1485:2: undefined: statsMu
+server/session_test.go:1486:23: undefined: stats
+server/session_test.go:1487:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode4xx_013(t *testing.T) {
+    // Arrange
+    resetStats()
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    msg := &ServerComMessage{
+        Id: "msgCtrl4xx",
+        Ctrl: &MsgServerCtrl{
+            Code:      404, // Valid 4xx code
+            Timestamp: time.Time{},
+        },
+    }
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+    statsMu.Lock()
+    assert.Equal(t, 1.0, stats["CtrlCodesTotal4xx"], "4xx counter should be incremented")
+    statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: resetStats
+server/session_test.go:1485:2: undefined: statsMu
+server/session_test.go:1486:23: undefined: stats
+server/session_test.go:1487:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_CtrlValidCode5xx_124(t *testing.T) {
+    // Arrange
+    resetStats()
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+    s.inflightReqs.Done()
+
+    msg := &ServerComMessage{
+        Id: "msgCtrl5xx",
+        Ctrl: &MsgServerCtrl{
+            Code:      503, // Valid 5xx code
+            Timestamp: time.Time{},
+        },
+    }
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be sent")
+    statsMu.Lock()
+    assert.Equal(t, 1.0, stats["CtrlCodesTotal5xx"], "5xx counter should be incremented")
+    statsMu.Unlock()
+}
+
+
+Error Message:
+server/session_test.go:1459:2: undefined: resetStats
+server/session_test.go:1485:2: undefined: statsMu
+server/session_test.go:1486:23: undefined: stats
+server/session_test.go:1487:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+    // "github.com/tinode/chat/server/logs" // If mocking logs
+)
+
+Test Implementation:
+func TestQueueOut_CtrlInvalidCode_235(t *testing.T) {
+    // Arrange
+    resetStats()
+
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "testSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Not cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+     s.inflightReqs.Done()
+
+    msg := &ServerComMessage{
+        Id: "msgCtrlInvalid",
+        Ctrl: &MsgServerCtrl{
+            Code:      199, // Invalid code < 200
+            Timestamp: time.Time{},
+        },
+    }
+
+    // Mock logs.Err.Println (optional, depends on logging setup)
+    // logs.Warn = ...
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed even with invalid code")
+    require.Len(t, sendChan, 1, "Message should be sent")
+    statsMu.Lock()
+    assert.Zero(t, stats["CtrlCodesTotal1xx"], "1xx counter should not exist or be zero")
+    assert.Zero(t, stats["CtrlCodesTotal6xx"], "6xx counter should not exist or be zero")
+    statsMu.Unlock()
+    // Assert log message if logs are mocked
+}
+
+
+Error Message:
+server/session_test.go:1460:2: undefined: resetStats
+server/session_test.go:1489:2: undefined: statsMu
+server/session_test.go:1490:17: undefined: stats
+server/session_test.go:1491:17: undefined: stats
+server/session_test.go:1492:2: undefined: statsMu
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/tinode/chat/server/store/types"
+    // "github.com/tinode/chat/server/logs" // If mocking logs
+)
+
+Test Implementation:
+func TestQueueOut_SendQueueFull_346(t *testing.T) {
+    // Arrange
+    sendChan := make(chan any) // Unbuffered channel
+    s := &Session{
+        sid:          "fullQueueSid",
+        send:         sendChan,
+        proto:        WEBSOCK,
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+     s.inflightReqs.Done()
+    msg := &ServerComMessage{Id: "msgToDrop"}
+
+    // Mock logs.Err.Println (optional)
+    // logs.Err = ...
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.False(t, result, "queueOut should return false when send queue is full")
+    // Assert log message if logs are mocked
+}
+
+
+Error Message:
+panic: boundedWaitGroup.Done() called before Add().
+	 [recovered]
+	panic: boundedWaitGroup.Done() called before Add().
+	
+
+goroutine 85 [running]:
+testing.tRunner.func1.2({0x105ef52a0, 0x14000e5e120})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x105ef52a0?, 0x14000e5e120?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).Panicln(0x14000549290, {0x14000e38ec8?, 0x14000e38ed8?, 0x1057e4c24?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:317 +0x68
+github.com/tinode/chat/server.(*boundedWaitGroup).Done(0x140005432d8)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/sessionstore.go:52 +0xe4
+github.com/tinode/chat/server.TestQueueOut_SendQueueFull_346(0x14000e5a680)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/session_test.go:1468 +0x130
+testing.tRunner(0x14000e5a680, 0x1062b2eb8)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server	0.956s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestQueueOut_DirectSuccess_457(t *testing.T) {
+    // Arrange
+    sendChan := make(chan any, 1)
+    s := &Session{
+        sid:          "directSid",
+        send:         sendChan,
+        proto:        WEBSOCK, // Non-multiplex, non-cluster
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+    }
+     s.inflightReqs.Done()
+    msg := &ServerComMessage{Id: "directMsg"}
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should succeed")
+    require.Len(t, sendChan, 1, "Message should be in the send channel")
+    assert.Same(t, msg, <-sendChan, "Correct message should be sent")
+}
+
+
+Error Message:
+panic: boundedWaitGroup.Done() called before Add().
+	 [recovered]
+	panic: boundedWaitGroup.Done() called before Add().
+	
+
+goroutine 85 [running]:
+testing.tRunner.func1.2({0x1037512a0, 0x14000cf6810})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1632 +0x1bc
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1635 +0x334
+panic({0x1037512a0?, 0x14000cf6810?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/runtime/panic.go:785 +0x124
+log.(*Logger).Panicln(0x14000648ae0, {0x14000cd6e98?, 0x14000cd6ea8?, 0x103040c28?})
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/log/log.go:317 +0x68
+github.com/tinode/chat/server.(*boundedWaitGroup).Done(0x14000633338)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/sessionstore.go:52 +0xe4
+github.com/tinode/chat/server.TestQueueOut_DirectSuccess_457(0x14000cfa680)
+	/private/var/folders/6m/gzv82mj53zvgnq3ym_nh7bqc0000gn/T/repo-replica-3566326218/server/session_test.go:1467 +0x134
+testing.tRunner(0x14000cfa680, 0x103b0eea8)
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1690 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.23.2/libexec/src/testing/testing.go:1743 +0x314
+FAIL	github.com/tinode/chat/server	0.717s
+FAIL
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/stretchr/testify/require"
+    "github.com/tinode/chat/server/store/types"
+    "github.com/tinode/chat/server/concurrency"
+)
+
+Test Implementation:
+func TestQueueOut_DirectMultiplexSuccess_568(t *testing.T) {
+    // Arrange
+    sendChan := make(chan any, 1)
+    mockPool := &mockPool{}
+    mockPool.On("Schedule", mock.AnythingOfType("func()")).Return().Once()
+
+    s := &Session{
+        sid:          "multiplexSid",
+        send:         sendChan,
+        proto:        MULTIPLEX, // Is multiplex
+        inflightReqs: newBoundedWaitGroup(1),
+        bkgTimer:     time.NewTimer(1 * time.Hour),
+        proxiedTopic: "proxyTopic",
+    }
+     s.inflightReqs.Done()
+    msg := &ServerComMessage{Id: "multiplexMsg"}
+
+    originalCluster := globals.cluster
+    globals.cluster = &Cluster{proxyEventQueue: mockPool}
+    defer func() { globals.cluster = originalCluster }()
+
+    // Act
+    result := s.queueOut(msg)
+
+    // Assert
+    assert.True(t, result, "queueOut should return true on successful send")
+    require.Len(t, sendChan, 1, "Message should be in the send channel")
+    assert.Same(t, msg, <-sendChan, "Correct message should be sent")
+    mockPool.AssertExpectations(t)
+}
+
+
+Error Message:
+server/session_test.go:1461:15: undefined: mockPool
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync/atomic"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestCleanUp_Expired_679(t *testing.T) {
+    // Arrange
+    doneChan := make(chan *ClientComMessage, 1)
+    stopChan := make(chan any, 1) // Use buffered for stopSession mock
+
+    inflight := newBoundedWaitGroup(1)
+    inflight.Add(1) // Simulate one inflight request
+
+    s := &Session{
+        sid:          "expiredSid",
+        send:         make(chan any, 1), // Needed for purgeChannels
+        stop:         stopChan,
+        detach:       make(chan string, 1), // Needed for purgeChannels
+        inflightReqs: inflight,
+        bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+        subs: map[string]*Subscription{
+            "topic1": {
+                done: doneChan,
+            },
+        },
+    }
+
+    // Mock session store interaction (expect NO Delete call)
+    mockSS := &mockSessionStore{} // Use local mockSessionStore
+    originalSS := globals.sessionStore
+    globals.sessionStore = mockSS
+    defer func() { globals.sessionStore = originalSS }()
+
+    // Mock stopSession by checking if stop channel is closed
+    originalStopSession := stopSession
+    stopSessionCalled := false
+    stopSession = func(s *Session, err error) { // Assuming stopSession is a package func
+        close(s.stop)
+        stopSessionCalled = true
+    }
+    defer func() { stopSession = originalStopSession }() // Restore original
+
+
+    // Act
+    // Simulate inflight request finishing *concurrently*
+    go func() {
+        time.Sleep(10 * time.Millisecond) // Give cleanUp time to call Wait
+        s.inflightReqs.Done()
+    }()
+
+    s.cleanUp(true) // expired = true
+
+    // Assert
+    assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating), "terminating flag should be set")
+    assert.Nil(t, s.inflightReqs, "inflightReqs should be nilled after cleanup finishes")
+    assert.False(t, s.background, "background flag should be false")
+    mockSS.AssertNotCalled(t, "Delete", mock.Anything) // Verify Delete was NOT called
+
+    // Verify unsubAll was called (check channel)
+    select {
+    case msg := <-doneChan:
+        assert.Same(t, s, msg.sess)
+        assert.False(t, msg.init)
+    case <-time.After(100 * time.Millisecond):
+        t.Error("unsubAll did not send message to done channel")
+    }
+
+    // Verify stopSession was called (check stop channel closed and flag)
+    <-s.stop // Wait for channel close or timeout
+    assert.True(t, stopSessionCalled, "stopSession should have been called")
+
+    // Verify timer was stopped (cannot directly check, assume Stop() was called)
+    // Verify channels purged (cannot directly check, assume purgeChannels() was called)
+}
+
+
+Error Message:
+server/session_test.go:1483:13: undefined: mockSessionStore
+server/session_test.go:1489:25: undefined: stopSession
+server/session_test.go:1491:2: undefined: stopSession
+server/session_test.go:1495:17: undefined: stopSession
+-------------------------------------------------
+
+--------------------Test Case--------------------
+Import Statements:
+import (
+    "sync/atomic"
+    "testing"
+    "time"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+    "github.com/tinode/chat/server/store/types"
+)
+
+Test Implementation:
+func TestCleanUp_NotExpired_780(t *testing.T) {
+    // Arrange
+    doneChan := make(chan *ClientComMessage, 1)
+    stopChan := make(chan any, 1)
+    sid := "notExpiredSid"
+
+    inflight := newBoundedWaitGroup(1)
+    inflight.Add(1) // Simulate one inflight request
+
+    s := &Session{
+        sid:          sid,
+        send:         make(chan any, 1),
+        stop:         stopChan,
+        detach:       make(chan string, 1),
+        inflightReqs: inflight,
+        bkgTimer:     time.NewTimer(1 * time.Hour), // Ensure timer exists
+        subs: map[string]*Subscription{
+            "topic1": {done: doneChan},
+        },
+    }
+
+    // Mock session store interaction (expect ONE Delete call)
+    mockSS := &mockSessionStore{}
+    mockSS.On("Delete", s).Return().Once() // Expect Delete to be called exactly once with s
+    originalSS := globals.sessionStore
+    globals.sessionStore = mockSS
+    defer func() { globals.sessionStore = originalSS }()
+
+    // Mock stopSession
+    originalStopSession := stopSession
+    stopSessionCalled := false
+    stopSession = func(s *Session, err error) {
+        close(s.stop)
+        stopSessionCalled = true
+    }
+    defer func() { stopSession = originalStopSession }()
+
+    // Act
+    go func() {
+        time.Sleep(10 * time.Millisecond)
+        s.inflightReqs.Done()
+    }()
+
+    s.cleanUp(false) // expired = false
+
+    // Assert
+    assert.EqualValues(t, 1, atomic.LoadInt32(&s.terminating))
+    assert.Nil(t, s.inflightReqs)
+    assert.False(t, s.background)
+    mockSS.AssertExpectations(t) // Verify Delete(s) was called
+
+    // Verify unsubAll was called
+    select {
+    case msg := <-doneChan:
+        assert.Same(t, s, msg.sess)
+    case <-time.After(100 * time.Millisecond):
+        t.Error("unsubAll did not send message to done channel")
+    }
+
+    // Verify stopSession was called
+    <-s.stop
+    assert.True(t, stopSessionCalled, "stopSession should have been called")
+}
+
+
+Error Message:
+server/session_test.go:1481:13: undefined: mockSessionStore
+server/session_test.go:1488:25: undefined: stopSession
+server/session_test.go:1490:2: undefined: stopSession
+server/session_test.go:1494:17: undefined: stopSession
+-------------------------------------------------
+
